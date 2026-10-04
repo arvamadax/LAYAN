@@ -8,6 +8,8 @@ import { Logo, SiteFooter, setLang, useLang, type Lang } from "@/components/laya
 import { ThemeToggle } from "@/components/layan/app-bar"
 import Link from "next/link"
 import { StudentFlows } from "@/components/layan/student-flows"
+import { Download as DlIcon, Laptop, Smartphone, Terminal } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 
 // Landing page publik.
 // Isi dibatasi ke 4 layanan yang benar-benar dilayani agent (lihat SYSTEM_PROMPT di api/src/tools.rs).
@@ -23,7 +25,7 @@ const ICONS: Record<string, string> = {
 
 const ID = {
   navAria: "Navigasi utama", langLabel: "Bahasa", motionLabel: "Animasi",
-  nav: { layanan: "Layanan", cara: "Cara Kerja", app: "App", menu: "Menu" },
+  nav: { layanan: "Layanan", cara: "Cara Kerja", app: "App", faq: "FAQ", menu: "Menu" },
   signin: "Masuk", open: "Buka LAYAN", student: "Mahasiswa",
   h1a: "Urus layanan kampus.",
   phrases: ["Lewat satu chat.", "Tanpa antre.", "Sampai selesai."],
@@ -69,6 +71,17 @@ const ID = {
   appAndroid: "Unduh app Android",
   installHow: "Cara pasang di HP", moreLinks: [["Keamanan & sumber jawaban", "/keamanan"], ["Untuk staf & teknisi", "/untuk-staf"], ["FAQ", "/faq"]],
 
+  dlBtn: "Unduh app",
+  dlTitle: "Unduh LAYAN",
+  dlSub: "Pilih platform untuk cara pasang yang benar.",
+  dlMore: "Selengkapnya di halaman Unduh",
+  dlPlats: {
+    apple: { name: "Apple", title: "Apple: iPhone, iPad, Mac", lines: ["Tidak ada app LAYAN di App Store.", "iPhone/iPad: buka di Safari, ketuk Bagikan, lalu Tambah ke Layar Utama.", "Mac: PWA lewat Chrome/Edge (ikon instal di kolom alamat), atau Safari lewat menu File lalu Add to Dock."] },
+    android: { name: "Android", title: "Android", lines: ["Khusus akun mahasiswa."], apk: "Unduh APK", alt: "Alternatif: PWA lewat Chrome — menu titik tiga, lalu Instal aplikasi." },
+    windows: { name: "Windows", title: "Windows", lines: ["Tidak ada installer .exe.", "PWA lewat Chrome/Edge: klik ikon instal di ujung kolom alamat."] },
+    linux: { name: "Linux", title: "Linux", lines: ["Tidak ada .deb/.AppImage.", "PWA lewat Chrome/Chromium/Edge: klik ikon instal di kolom alamat."] },
+  } as Record<Plat, { name: string; title: string; lines: string[]; apk?: string; alt?: string }>,
+
   mTitle: "Masuk untuk melanjutkan",
   mDesc: "Halaman ini bebas dijelajahi. Untuk menjalankan aksi ini, masuk dulu dengan akun kampus.",
   mNext: "Setelah masuk, kamu langsung lanjut ke", mQuoteNote: "Pertanyaan ini sudah terisi di chat.",
@@ -83,7 +96,7 @@ type Dict = typeof ID
 
 const EN: Dict = {
   navAria: "Main navigation", langLabel: "Language", motionLabel: "Animation",
-  nav: { layanan: "Services", cara: "How it works", app: "App", menu: "Menu" },
+  nav: { layanan: "Services", cara: "How it works", app: "App", faq: "FAQ", menu: "Menu" },
   signin: "Sign in", open: "Open LAYAN", student: "Student",
   h1a: "Handle campus services.",
   phrases: ["In one chat.", "No queues.", "Start to finish."],
@@ -129,6 +142,17 @@ const EN: Dict = {
   appAndroid: "Download Android app",
   installHow: "How to install", moreLinks: [["Trust & answer sources", "/keamanan"], ["For staff & technicians", "/untuk-staf"], ["FAQ", "/faq"]],
 
+  dlBtn: "Get the app",
+  dlTitle: "Download LAYAN",
+  dlSub: "Pick your platform for the right install steps.",
+  dlMore: "More on the Get the app page",
+  dlPlats: {
+    apple: { name: "Apple", title: "Apple: iPhone, iPad, Mac", lines: ["No LAYAN app on the App Store.", "iPhone/iPad: open in Safari, tap Share, then Add to Home Screen.", "Mac: PWA via Chrome/Edge (install icon in the address bar), or Safari via the File menu, then Add to Dock."] },
+    android: { name: "Android", title: "Android", lines: ["Student accounts only."], apk: "Download APK", alt: "Alternative: PWA via Chrome — three-dot menu, then Install app." },
+    windows: { name: "Windows", title: "Windows", lines: ["No .exe installer.", "PWA via Chrome/Edge: click the install icon at the end of the address bar."] },
+    linux: { name: "Linux", title: "Linux", lines: ["No .deb/.AppImage.", "PWA via Chrome/Chromium/Edge: click the install icon in the address bar."] },
+  } as Record<Plat, { name: string; title: string; lines: string[]; apk?: string; alt?: string }>,
+
   mTitle: "Sign in to continue",
   mDesc: "This page is free to explore. To run this action, sign in with your campus account first.",
   mNext: "After signing in, you continue to", mQuoteNote: "This question will already be in the chat.",
@@ -144,6 +168,9 @@ const DICT: Record<Lang, Dict> = { id: ID, en: EN }
 /** Aksi nyata yang butuh login. `q` diisikan ke kolom chat setelah login (app/app/page.tsx). */
 type Intent = { key: string; path: string; q?: string }
 type Gate = (i: Intent) => () => void
+
+/** Platform panel Unduh: Apple, Android, Windows, Linux. */
+type Plat = "apple" | "android" | "windows" | "linux"
 
 const SECTIONS = ["top", "layanan", "cara-kerja", "mulai"]
 const EASE = "cubic-bezier(.2,.7,.2,1)"
@@ -222,6 +249,55 @@ function GoButton({ onClick, children, className = "" }: { onClick: () => void; 
         <span className={`absolute -translate-x-[160%] ${slide} group-hover:translate-x-0`}><Arrow /></span>
       </span>
     </button>
+  )
+}
+
+/* ---------- panel Unduh di nav: Apple / Android / Windows / Linux ---------- */
+
+const PLATS: { k: Plat; Icon: typeof Smartphone }[] = [
+  { k: "apple", Icon: Smartphone },
+  { k: "android", Icon: DlIcon },
+  { k: "windows", Icon: Laptop },
+  { k: "linux", Icon: Terminal },
+]
+
+// platform pengunjung ditebak dari userAgent untuk disorot duluan;
+// tidak cocok = linux (instruksinya PWA generik, berlaku di Chromium mana pun)
+const detectPlat = (): Plat => {
+  const ua = navigator.userAgent.toLowerCase()
+  if (/iphone|ipad|macintosh|mac os/.test(ua)) return "apple"
+  if (/android/.test(ua)) return "android"
+  if (/windows/.test(ua)) return "windows"
+  return "linux"
+}
+
+/** Isi sesuai tabel fakta di issue: tanpa klaim App Store / Play Store / installer. */
+function DownloadDialog({ t, plat, setPlat, open, onOpenChange }: { t: Dict; plat: Plat; setPlat: (p: Plat) => void; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const p = t.dlPlats[plat]
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="rounded-[24px] motion-reduce:animate-none sm:max-w-[520px]">
+        <DialogTitle className="text-[22px] font-semibold tracking-[-.02em]">{t.dlTitle}</DialogTitle>
+        <DialogDescription className="text-[14.5px]">{t.dlSub}</DialogDescription>
+        <div role="group" aria-label={t.dlTitle} className="grid grid-cols-4 gap-2">
+          {PLATS.map(({ k, Icon }) => (
+            <button key={k} type="button" aria-pressed={plat === k} onClick={() => setPlat(k)} className={`flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2.5 text-xs font-semibold transition-colors ${plat === k ? "border-primary bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <Icon size={20} />
+              {t.dlPlats[k].name}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2.5 rounded-2xl bg-muted p-4">
+          <span className="text-[15px] font-semibold">{p.title}</span>
+          {p.lines.map((x) => (
+            <span key={x} className="text-[14px] leading-relaxed text-soft-foreground">{x}</span>
+          ))}
+          {p.apk && <a href="/api/app/layan.apk" download className={`${BTN_ACC} mt-1 self-start`}>{p.apk}</a>}
+          {p.alt && <span className="text-[13.5px] text-muted-foreground">{p.alt}</span>}
+          <Link href={`/unduh#${plat}`} onClick={() => onOpenChange(false)} className="text-sm font-semibold text-primary underline-offset-4 hover:underline">{t.dlMore}</Link>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -600,6 +676,12 @@ export function Landing() {
   const [scrolled, setScrolled] = useState(false)
   const [rail, setRail] = useState(0)
   const [menu, setMenu] = useState(false)
+  const [dl, setDl] = useState(false)
+  const [plat, setPlat] = useState<Plat>("android")
+  const openDl = () => {
+    setPlat(detectPlat())
+    setDl(true)
+  }
   const [intent, setIntent] = useState<Intent | null>(null)
 
   const root = useRef<HTMLDivElement>(null)
@@ -773,6 +855,7 @@ export function Landing() {
   const link = (id: string) => (e: React.MouseEvent) => (e.preventDefault(), scrollToId(id))
 
   const navLinks = ([["layanan", t.nav.layanan, 1], ["cara-kerja", t.nav.cara, 2], ["mulai", t.nav.app, 3]] as const).map(([id, label, idx]) => ({ id, label, on: rail === idx }))
+  const dlSize = scrolled ? 44 : 52 // tombol Unduh ikut mengecil saat scroll seperti pill-nya
   const nav = scrolled
     ? { outer: "12px 12px 0", maxW: 1040, h: 58, inner: "10px", bg: "color-mix(in srgb, var(--background) 84%, transparent)", bd: "var(--border)", blur: "blur(14px) saturate(1.4)", sh: "0 12px 40px -20px rgba(22,24,26,.25)" }
     : { outer: "18px 12px 0", maxW: 1400, h: 64, inner: "clamp(8px,2vw,24px)", bg: "transparent", bd: "transparent", blur: "none", sh: "none" }
@@ -781,14 +864,15 @@ export function Landing() {
   return (
     <div ref={root} data-motion={motion} className="layan-landing min-h-dvh overflow-x-clip bg-background text-foreground antialiased selection:bg-accent [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-[3px] [&_:focus-visible]:outline-ring">
       <header className="pointer-events-none fixed inset-x-0 top-0 z-60 flex justify-center transition-[padding] duration-[450ms] ease-[cubic-bezier(.2,.7,.2,1)]" style={{ padding: nav.outer }}>
+        <div className="flex w-full items-center gap-2" style={{ maxWidth: nav.maxW }}>
         <nav
           aria-label={t.navAria}
-          className="pointer-events-auto flex w-full items-center justify-between gap-4 rounded-[18px] border transition-all duration-500 ease-[cubic-bezier(.2,.7,.2,1)]"
-          style={{ maxWidth: nav.maxW, height: nav.h, padding: `0 ${nav.inner}`, background: nav.bg, borderColor: nav.bd, backdropFilter: nav.blur, WebkitBackdropFilter: nav.blur, boxShadow: nav.sh }}
+          className="pointer-events-auto flex min-w-0 flex-1 items-center justify-between gap-4 rounded-[18px] border transition-all duration-500 ease-[cubic-bezier(.2,.7,.2,1)]"
+          style={{ height: nav.h, padding: `0 ${nav.inner}`, background: nav.bg, borderColor: nav.bd, backdropFilter: nav.blur, WebkitBackdropFilter: nav.blur, boxShadow: nav.sh }}
         >
-          <a href="#top" onClick={link("top")} aria-label="LAYAN" className="flex items-center gap-2.5 text-[17px] font-extrabold tracking-[.04em] text-foreground">
+          <a href="#top" onClick={link("top")} aria-label="LAYAN" className="flex shrink-0 items-center gap-2.5 text-[17px] font-extrabold tracking-[.04em] text-foreground">
             <Logo size={26} />
-            LAYAN
+            <span className="hidden min-[400px]:inline">LAYAN</span>
           </a>
           <div className="hidden items-center gap-0.5 min-[1080px]:flex">
             {navLinks.map((l) => (
@@ -796,14 +880,17 @@ export function Landing() {
                 {l.label}
               </a>
             ))}
+            <Link href="/faq" className="whitespace-nowrap rounded-full px-3.5 py-2 text-[14.5px] font-medium text-muted-foreground transition-colors duration-300 hover:bg-foreground/5 hover:text-foreground">
+              {t.nav.faq}
+            </Link>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5">
             <button type="button" role="switch" aria-checked={motion === "on"} onClick={toggleMotion} className={`hidden h-11 pl-4 pr-1.5 min-[1080px]:flex cursor-pointer items-center gap-2.5 rounded-full border bg-card/60 text-[13.5px] font-medium transition-colors duration-300 hover:text-foreground ${motion === "on" ? "text-foreground" : "text-muted-foreground"}`}>
               {t.motionLabel}
               <SwitchTrack on={motion === "on"} />
             </button>
             <ThemeToggle />
-            <div role="group" aria-label={t.langLabel} className="flex rounded-full border bg-card/60 p-1">
+            <div role="group" aria-label={t.langLabel} className="hidden rounded-full border bg-card/60 p-1 min-[1080px]:flex">
               {(["id", "en"] as const).map((l) => (
                 <button key={l} type="button" onClick={() => setLang(l)} aria-pressed={lang === l} className={`h-9 min-w-11 cursor-pointer rounded-full px-3 font-mono text-xs font-medium uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                   {l}
@@ -814,12 +901,16 @@ export function Landing() {
               {me && <span aria-hidden className="flex size-8 items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-primary-foreground">{initial}</span>}
               {me ? t.open : t.signin}
             </button>
-            <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label={t.nav.menu} className="flex size-11 cursor-pointer flex-col items-center justify-center gap-[5px] rounded-full border bg-card/70 min-[1080px]:hidden">
+            <button type="button" onClick={() => setMenu((m) => !m)} aria-expanded={menu} aria-label={t.nav.menu} className="flex size-11 shrink-0 cursor-pointer flex-col items-center justify-center gap-[5px] rounded-full border bg-card/70 min-[1080px]:hidden">
               <span className="h-[1.5px] w-4 bg-foreground transition-transform duration-300" style={{ transform: menu ? "translateY(3.25px) rotate(45deg)" : "none" }} />
               <span className="h-[1.5px] w-4 bg-foreground transition-transform duration-300" style={{ transform: menu ? "translateY(-3.25px) rotate(-45deg)" : "none" }} />
             </button>
           </div>
         </nav>
+        <button type="button" onClick={openDl} aria-label={t.dlBtn} title={t.dlBtn} style={{ width: dlSize, height: dlSize }} className="pointer-events-auto flex shrink-0 cursor-pointer items-center justify-center rounded-full bg-ink text-ink-foreground shadow-[0_12px_30px_-14px_rgba(22,24,26,.5)] transition-all duration-500 ease-[cubic-bezier(.2,.7,.2,1)] hover:-translate-y-0.5 active:scale-[.97]">
+          <Download />
+        </button>
+        </div>
       </header>
       {menu && (
         <div className="fixed inset-x-3 top-[80px] z-[59] flex flex-col rounded-[20px] border bg-card p-2.5 shadow-[0_30px_60px_-30px_rgba(22,24,26,.3)] animate-[layanMsgIn_.35s_cubic-bezier(.2,.7,.2,1)_both] min-[1080px]:hidden">
@@ -828,6 +919,16 @@ export function Landing() {
               {l.label}
             </a>
           ))}
+          <Link href="/faq" onClick={() => setMenu(false)} className="rounded-xl px-3.5 py-4 text-xl font-medium tracking-[-.02em] text-foreground hover:bg-muted">
+            {t.nav.faq}
+          </Link>
+          <div role="group" aria-label={t.langLabel} className="mt-1 flex gap-1 rounded-2xl border bg-card/60 p-1.5">
+            {(["id", "en"] as const).map((l) => (
+              <button key={l} type="button" onClick={() => { setLang(l); setMenu(false) }} aria-pressed={lang === l} className={`h-11 flex-1 cursor-pointer rounded-xl font-mono text-xs font-medium uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                {l === "id" ? "Indonesia" : "English"}
+              </button>
+            ))}
+          </div>
           <button type="button" role="switch" aria-checked={motion === "on"} onClick={toggleMotion} className={`mt-1 flex h-12 justify-between px-3.5 cursor-pointer items-center gap-2.5 rounded-full border bg-card/60 text-[13.5px] font-medium transition-colors duration-300 hover:text-foreground ${motion === "on" ? "text-foreground" : "text-muted-foreground"}`}>
             {t.motionLabel}
             <SwitchTrack on={motion === "on"} />
@@ -925,6 +1026,9 @@ export function Landing() {
           <SiteFooter lang={lang} />
         </section>
       </main>
+
+      {/* Panel Unduh: Apple / Android / Windows / Linux */}
+      <DownloadDialog t={t} plat={plat} setPlat={setPlat} open={dl} onOpenChange={setDl} />
 
       {/* Modal masuk: menyebut aksi & pertanyaan yang akan dilanjutkan setelah login */}
       <div aria-hidden={!modal} inert={!modal} className="fixed inset-0 z-100 flex items-center justify-center p-5" style={{ visibility: modal ? "visible" : "hidden", transition: `visibility 0s linear ${modal ? "0s" : ".5s"}` }}>

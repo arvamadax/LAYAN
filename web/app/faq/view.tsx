@@ -15,6 +15,7 @@ const T = {
         ["Bagaimana cara masuk?", "Masuk dengan NIM atau email kampus beserta password akunmu. Halaman ini dan landing page bisa dijelajahi tanpa akun."],
         ["Layanan apa saja yang bisa diurus?", "Empat: surat akademik (dispensasi, keterangan aktif kuliah, pengantar magang/KP, izin penelitian, rekomendasi beasiswa), pertanyaan aturan akademik, booking ruang, dan laporan kerusakan fasilitas. Pertanyaan di luar itu ditolak dengan sopan supaya jawaban tetap fokus dan bisa dipertanggungjawabkan."],
         ["Bisa dipakai dari HP?", "Bisa. Pasang dari browser sebagai PWA, atau unduh App Android (khusus akun mahasiswa). Caranya ada di halaman Unduh."],
+        ["Apakah ada app untuk iPhone, Windows, atau Linux?", "Tidak ada app di App Store, installer Windows, atau paket Linux. iPhone dan iPad dipasang sebagai PWA dari Safari (Bagikan, lalu Tambah ke Layar Utama); Windows dan Linux lewat PWA di Chrome atau Edge (ikon instal di kolom alamat). Android punya APK khusus mahasiswa, atau PWA lewat Chrome. Panduan per platform ada di halaman Unduh."],
       ]],
       ["Jawaban dan keputusan", [
         ["Bagaimana kalau AI salah menjawab?", "Jawaban aturan akademik selalu menyertakan bagian pedoman yang dikutip, jadi kamu bisa memeriksanya. Kalau jawabannya tidak ditemukan, LAYAN membuatkan tiket ke unit terkait, bukan menebak."],
@@ -42,6 +43,7 @@ const T = {
         ["How do I sign in?", "Sign in with your student ID (NIM) or campus email and your account password. This page and the landing page can be browsed without an account."],
         ["Which services are covered?", "Four: academic letters (dispensation, proof of enrollment, internship cover letter, research permit, scholarship recommendation), academic rule questions, room booking, and facility damage reports. Anything else is politely declined so answers stay focused and accountable."],
         ["Can I use it on my phone?", "Yes. Install it from the browser as a PWA, or download the Android app (student accounts only). See the Get the app page."],
+        ["Is there an app for iPhone, Windows, or Linux?", "There is no App Store app, Windows installer, or Linux package. iPhone and iPad install it as a PWA from Safari (Share, then Add to Home Screen); Windows and Linux use a PWA in Chrome or Edge (install icon in the address bar). Android has an APK for students, or a PWA via Chrome. Per-platform guides are on the Get the app page."],
       ]],
       ["Answers and decisions", [
         ["What if the AI gets it wrong?", "Academic answers always include the quoted handbook section, so you can check it. If no answer is found, LAYAN opens a ticket to the right office instead of guessing."],
