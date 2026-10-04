@@ -1,10 +1,13 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowDownWideNarrow, Bot, Check, CircleAlert, ExternalLink, Inbox, Maximize2, MousePointerClick, Pencil, Reply, X } from "lucide-react"
+import { ArrowDownWideNarrow, ArrowLeft, Bot, Check, CircleAlert, ExternalLink, Inbox, Maximize2, MousePointerClick, Reply, Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
@@ -40,33 +43,33 @@ const TABS = [
 ] as const
 type Tab = (typeof TABS)[number][0]
 
-const EDIT_LABEL: Record<Worker, string> = { surat: "Edit draft", helpdesk: "", fasilitas: "Ubah jadwal" }
-
-type Metrics = {
-  total: number
-  by: { surat: number; tiket: number; booking: number; laporan: number; jawaban: number }
-  avg_minutes: number | null
-  auto: number
-  handled: number
-  auto_pct: number
-  saved_minutes: number
-  tokens: { calls: number; input: number; output: number; cache_pct: number; per_request: number }
-}
-
 const hours = (m: number) => (m >= 60 ? `${(m / 60).toFixed(1).replace(".", ",")} jam` : `${m} mnt`)
 
-// Catatan: editor draft belum ada, fokus MVP ada di approve/reject
-const notInDemo = () => toast("Belum tersedia di versi ini", { description: "Edit draft menyusul setelah MVP." })
-
-function Metric({ label, value, note, noteClass, valueClass }: { label: string; value: React.ReactNode; note: string; noteClass?: string; valueClass?: string }) {
+export function StaffTabs() {
+  const pathname = usePathname()
+  const tabs = [
+    { label: "Antrean", href: "/staf" },
+    { label: "Metrik", href: "/staf/metrik" },
+  ] as const
   return (
-    <div className="flex items-end justify-between gap-3 rounded-[12px] border bg-card px-4 py-3.5">
-      <div className="flex flex-col gap-1">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        <span className={cn("font-mono text-[26px] font-bold leading-[30px] tracking-[-0.02em]", valueClass)}>{value}</span>
-      </div>
-      <span className={cn("pb-1 text-xs text-muted-foreground", noteClass)}>{note}</span>
-    </div>
+    <nav aria-label="Navigasi staf" className="flex flex-none items-center gap-1 border-b bg-card px-4 sm:px-6">
+      {tabs.map((t) => {
+        const on = pathname === t.href
+        return (
+          <Link
+            key={t.href}
+            href={t.href}
+            aria-current={on || undefined}
+            className={cn(
+              "flex h-12 items-center px-3 text-[14px] font-semibold transition-colors",
+              on ? "text-foreground shadow-[inset_0_-2px_0_var(--primary)]" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t.label}
+          </Link>
+        )
+      })}
+    </nav>
   )
 }
 
@@ -87,14 +90,17 @@ function Toast({ ok, title, sub, onUndo }: { ok: boolean; title: string; sub: st
   )
 }
 
-function Detail({ item, busy, onApprove, onReject, onReply }: { item: QueueItem; busy: boolean; onApprove: () => void; onReject: () => void; onReply: () => void }) {
+function Detail({ item, busy, onApprove, onReject, onReply, onBack }: { item: QueueItem; busy: boolean; onApprove: () => void; onReject: () => void; onReply: () => void; onBack: () => void }) {
   const ticket = item.worker === "helpdesk"
   const last = item.timeline.length - 1
   return (
     <>
-      <div className="flex flex-none items-center gap-4 border-b px-6 py-[18px]">
+      <div className="sticky top-0 z-10 flex flex-none flex-wrap items-center gap-x-4 gap-y-3 border-b bg-card px-4 py-4 sm:px-6">
+        <button type="button" onClick={onBack} aria-label="Kembali ke antrean" className="grid size-11 flex-none place-items-center rounded-[12px] hover:bg-muted lg:hidden">
+          <ArrowLeft className="size-[22px]" />
+        </button>
         <WorkerTile worker={item.worker} size={44} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
           <div className="flex items-center gap-2.5">
             <h2 className="text-xl font-bold tracking-[-0.01em]">{item.type}</h2>
             <StatusBadge status={item.worker === "helpdesk" ? "submitted" : "pending_approval"} />
@@ -105,24 +111,18 @@ function Detail({ item, busy, onApprove, onReject, onReply }: { item: QueueItem;
           </span>
         </div>
         <div className="flex flex-none gap-2">
-          {!ticket && (
-            <Button variant="outline" className="px-3.5" onClick={notInDemo}>
-              <Pencil />
-              {EDIT_LABEL[item.worker]}
-            </Button>
-          )}
           <Button variant="destructive-outline" className="px-3.5 active:scale-[0.98]" onClick={onReject} disabled={busy}>
             <X />
-            Reject
+            Tolak
           </Button>
           <Button className="px-[18px] active:scale-[0.98]" onClick={ticket ? onReply : onApprove} disabled={busy}>
             {ticket ? <Reply /> : <Check />}
-            {ticket ? "Balas" : "Approve"}
+            {ticket ? "Balas" : "Setujui"}
           </Button>
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex flex-col gap-7 overflow-auto p-6">
           <section className="flex flex-col gap-2.5">
             <h3 className="flex items-center gap-2 text-sm font-bold">
@@ -180,7 +180,7 @@ function Detail({ item, busy, onApprove, onReject, onReply }: { item: QueueItem;
           {item.letter && (
             <section className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold">Preview draft surat</h3>
+                <h3 className="text-sm font-bold">Pratinjau draft surat</h3>
                 <a href={`/surat/${item.id}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[13px] font-semibold text-primary hover:text-primary-hover">
                   <Maximize2 className="size-3.5" />
                   Buka PDF
@@ -193,9 +193,9 @@ function Detail({ item, busy, onApprove, onReject, onReply }: { item: QueueItem;
           )}
         </div>
 
-        <aside className="flex flex-col gap-4 overflow-auto border-l bg-panel p-6">
+        <aside className="flex flex-col gap-4 overflow-auto border-t bg-panel p-6 lg:border-l lg:border-t-0">
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-sm font-bold">Timeline aksi agent</h3>
+            <h3 className="text-sm font-bold">Linimasa aksi agent</h3>
             <span className="text-xs text-muted-foreground">{item.timeline.length} aksi · tercatat di audit log</span>
           </div>
           <ol className="flex flex-col">
@@ -224,7 +224,7 @@ function Detail({ item, busy, onApprove, onReject, onReply }: { item: QueueItem;
               </div>
               <div className="flex flex-col gap-[3px]">
                 <span className="text-[13px] font-semibold text-violet">Menunggu keputusan staf</span>
-                <span className="text-xs text-muted-foreground">{ticket ? "Balas atau tolak tiket" : "Approve, reject, atau edit draft"}</span>
+                <span className="text-xs text-muted-foreground">{ticket ? "Balas atau tolak tiket" : "Setujui atau tolak pengajuan"}</span>
               </div>
             </li>
           </ol>
@@ -254,18 +254,18 @@ export function StaffConsole() {
   const [items, setItems] = useState<QueueItem[] | null>(null)
   const [loadError, setLoadError] = useState("")
   const [tab, setTab] = useState<Tab>("semua")
+  const [q, setQ] = useState("")
+  const [oldestFirst, setOldestFirst] = useState(true)
   const [selected, setSelected] = useState<string | null>(null)
   const [dialog, setDialog] = useState<"reject" | "reply" | null>(null)
   const [reason, setReason] = useState("")
-  const [metrics, setMetrics] = useState<Metrics | null>(null)
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(
     () =>
-      Promise.all([api<QueueItem[]>("/staff/queue"), api<Metrics>("/staff/metrics")]).then(
-        ([xs, m]) => {
+      api<QueueItem[]>("/staff/queue").then(
+        (xs) => {
           setItems(xs)
-          setMetrics(m)
           setLoadError("")
         },
         (e: Error) => setLoadError(e.message),
@@ -281,12 +281,16 @@ export function StaffConsole() {
   }, [load])
 
   const live = items ?? []
-  const visible = live.filter((q) => tab === "semua" || q.tab === tab)
-  const cur = visible.find((q) => q.id === selected) ?? visible[0]
+  // antrean urut dari yang paling lama menunggu; cari menyaring nama/NIM di klien
+  const needle = q.trim().toLowerCase()
+  const visible = live
+    .filter((x) => tab === "semua" || x.tab === tab)
+    .filter((x) => !needle || x.name.toLowerCase().includes(needle) || (x.nim ?? "").toLowerCase().includes(needle))
+    .sort((a, b) => (oldestFirst ? b.mins - a.mins : a.mins - b.mins))
+  const cur = visible.find((x) => x.id === selected) ?? visible[0]
   const first = cur?.name.split(" ")[0] ?? "mahasiswa"
-  const oldest = Math.max(0, ...live.map((q) => q.mins))
   const counts = { semua: live.length, surat: 0, tiket: 0, booking: 0 }
-  live.forEach((q) => counts[q.tab]++)
+  live.forEach((x) => counts[x.tab]++)
 
   async function decide(approve: boolean, text = "") {
     if (!cur) return
@@ -340,42 +344,12 @@ export function StaffConsole() {
   ]
 
   return (
-    <div className="flex min-h-[100dvh] min-w-[1280px] flex-col">
+    <div className="flex min-h-[100dvh] flex-col">
       <TopBar section="Staff Console" themeToggle />
+      <StaffTabs />
 
-      <div className="grid flex-none grid-cols-6 gap-3 px-6 pt-5">
-        <Metric
-          label="Permintaan hari ini"
-          value={metrics?.total ?? "–"}
-          note={metrics ? `Surat ${metrics.by.surat} · Tanya ${metrics.by.jawaban + metrics.by.tiket} · Ruang ${metrics.by.booking} · Lapor ${metrics.by.laporan}` : ""}
-        />
-        <Metric
-          label="Rata-rata waktu proses"
-          value={metrics?.avg_minutes != null ? <>{metrics.avg_minutes}<span className="ml-[3px] font-sans text-[15px] font-semibold text-muted-foreground">mnt</span></> : "–"}
-          note="masuk sampai siap diputuskan"
-        />
-        <Metric
-          label="Selesai otomatis"
-          value={metrics ? `${metrics.auto_pct}%` : "–"}
-          note={metrics ? `${metrics.auto} dari ${metrics.handled} tanpa staf` : ""}
-          noteClass="font-semibold text-ok"
-        />
-        <Metric label="Waktu staf dihemat" value={metrics ? hours(metrics.saved_minutes) : "–"} note="estimasi dari audit log" valueClass="text-primary" />
-        <Metric
-          label="Token AI per permintaan"
-          value={metrics?.tokens.per_request ? metrics.tokens.per_request.toLocaleString("id-ID") : "–"}
-          note={metrics ? `${metrics.tokens.calls} panggilan LLM${metrics.tokens.cache_pct > 0 ? ` · ${metrics.tokens.cache_pct}% dari cache` : ""}` : ""}
-        />
-        <Metric
-          label="Menunggu persetujuan"
-          value={items ? live.length : "–"}
-          valueClass="text-violet"
-          note={live.length === 0 ? "tidak ada antrean" : oldest >= 600 ? "tertua sejak kemarin" : `tertua ${oldest} menit`}
-        />
-      </div>
-
-      <div className="grid h-[max(720px,calc(100dvh-160px))] flex-1 grid-cols-[400px_minmax(0,1fr)] gap-4 px-6 pb-6 pt-4">
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
+      <div className="grid flex-1 grid-cols-1 gap-4 px-4 pb-4 pt-4 sm:px-6 lg:h-[calc(100dvh-160px)] lg:min-h-[560px] lg:grid-cols-[400px_minmax(0,1fr)] lg:pt-4">
+        <section className={cn("flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card", selected && cur ? "hidden lg:flex" : "flex")}>
           <Tabs
             value={tab}
             onValueChange={(v) => {
@@ -385,18 +359,25 @@ export function StaffConsole() {
             className="gap-3 border-b px-4 pt-4"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold">Approval queue</h2>
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <h2 className="text-base font-bold">Antrean persetujuan</h2>
+              <button
+                type="button"
+                onClick={() => setOldestFirst((v) => !v)}
+                aria-pressed={oldestFirst}
+                aria-label={oldestFirst ? "Urutkan: terbaru dulu" : "Urutkan: terlama dulu"}
+                title={oldestFirst ? "Urutkan: terbaru dulu" : "Urutkan: terlama dulu"}
+                className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              >
                 <ArrowDownWideNarrow className="size-3.5" />
-                Terbaru
-              </span>
+                {oldestFirst ? "Terlama" : "Terbaru"}
+              </button>
             </div>
             <TabsList variant="line" className="h-auto gap-1 p-0">
               {TABS.map(([k, label]) => (
                 <TabsTrigger
                   key={k}
                   value={k}
-                  className="h-[38px] flex-none gap-1.5 rounded-none px-2.5 text-[13px] font-semibold text-muted-foreground after:hidden data-[state=active]:text-foreground data-[state=active]:shadow-[inset_0_-2px_0_var(--primary)]! dark:data-[state=active]:border-transparent"
+                  className="h-11 flex-none gap-1.5 rounded-none px-2.5 text-[13px] font-semibold text-muted-foreground after:hidden data-[state=active]:text-foreground data-[state=active]:shadow-[inset_0_-2px_0_var(--primary)]! dark:data-[state=active]:border-transparent"
                 >
                   {label}
                   <span className={cn("inline-grid h-[18px] min-w-5 place-items-center rounded-full px-1.5 text-[11px] font-bold", tab === k ? "bg-ink text-ink-foreground" : "bg-muted text-muted-foreground")}>
@@ -407,6 +388,19 @@ export function StaffConsole() {
             </TabsList>
           </Tabs>
 
+          <div className="border-b px-4 py-2.5">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Cari nama atau NIM…"
+                aria-label="Cari nama atau NIM"
+                className="h-11 bg-background pl-9"
+              />
+            </div>
+          </div>
+
           <div className="min-h-0 flex-1 overflow-auto">
             {loadError && (
               <div role="alert" className="flex items-start gap-2 border-b bg-destructive-soft/60 px-4 py-2.5 text-[13px] text-destructive">
@@ -415,27 +409,27 @@ export function StaffConsole() {
               </div>
             )}
             {items === null && !loadError && <QueueSkeleton />}
-            {visible.map((q) => {
-              const on = q.id === cur?.id
+            {visible.map((x) => {
+              const on = x.id === cur?.id
               return (
                 <button
-                  key={q.id}
+                  key={x.id}
                   type="button"
                   aria-current={on || undefined}
-                  onClick={() => setSelected(q.id)}
+                  onClick={() => setSelected(x.id)}
                   className={cn(
                     "grid w-full cursor-pointer grid-cols-[32px_minmax(0,1fr)] gap-3 border-b px-4 py-3.5 text-left",
                     on ? "bg-accent shadow-[inset_3px_0_0_var(--primary)]" : "hover:bg-background",
                   )}
                 >
-                  <WorkerTile worker={q.worker} size={32} />
+                  <WorkerTile worker={x.worker} size={32} />
                   <span className="flex min-w-0 flex-col gap-[3px]">
                     <span className="flex items-baseline justify-between gap-2">
-                      <span className="text-sm font-semibold">{q.name}</span>
-                      <span className="whitespace-nowrap text-xs text-muted-foreground">{q.time}</span>
+                      <span className="text-sm font-semibold">{x.name}</span>
+                      <span className="whitespace-nowrap text-xs text-muted-foreground">menunggu {hours(x.mins)}</span>
                     </span>
-                    <span className="text-xs font-semibold" style={{ color: `var(--worker-${q.worker})` }}>{q.type}</span>
-                    <span className="truncate text-[13px] text-soft-foreground">{q.line}</span>
+                    <span className="text-xs font-semibold" style={{ color: `var(--worker-${x.worker})` }}>{x.type}</span>
+                    <span className="truncate text-[13px] text-soft-foreground">{x.prodi ? `${x.prodi} · ` : ""}{x.line}</span>
                   </span>
                 </button>
               )
@@ -445,18 +439,18 @@ export function StaffConsole() {
                 <span className="grid size-12 place-items-center rounded-lg bg-accent text-primary">
                   <Inbox className="size-6" />
                 </span>
-                <span className="text-base font-bold">Queue bersih</span>
+                <span className="text-base font-bold">{needle ? "Tidak ada hasil" : "Antrean kosong"}</span>
                 <span className="max-w-[260px] text-pretty text-[13px] leading-[19px] text-muted-foreground">
-                  Semua permintaan sudah diputuskan. Item baru dari agent akan muncul di sini.
+                  {needle ? `Tidak ada yang cocok dengan “${q.trim()}”. Coba nama atau NIM lain.` : "Semua permintaan sudah diputuskan. Item baru dari agent akan muncul di sini."}
                 </span>
               </div>
             )}
           </div>
         </section>
 
-        <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
+        <section className={cn("flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card", selected && cur ? "flex" : "hidden lg:flex")}>
           {cur ? (
-            <Detail key={cur.id} item={cur} busy={busy} onApprove={() => decide(true)} onReject={() => setDialog("reject")} onReply={() => setDialog("reply")} />
+            <Detail key={cur.id} item={cur} busy={busy} onApprove={() => decide(true)} onReject={() => setDialog("reject")} onReply={() => setDialog("reply")} onBack={() => setSelected(null)} />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-2.5 p-10 text-center text-muted-foreground">
               <span className="grid size-12 place-items-center rounded-lg bg-muted">
@@ -493,7 +487,7 @@ export function StaffConsole() {
           <div className="flex flex-col gap-3 px-6 py-[18px]">
             <div className={cn("flex flex-wrap gap-1.5", dialog === "reply" && "hidden")}>
               {chips.map((c) => (
-                <button key={c.label} type="button" onClick={() => setReason(c.text)} className="inline-flex h-[30px] cursor-pointer items-center rounded-full border border-input px-3 text-[13px] font-medium hover:bg-muted">
+                <button key={c.label} type="button" onClick={() => setReason(c.text)} className="inline-flex h-11 cursor-pointer items-center rounded-full border border-input px-3 text-[13px] font-medium hover:bg-muted">
                   {c.label}
                 </button>
               ))}

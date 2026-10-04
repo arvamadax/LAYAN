@@ -45,7 +45,7 @@ export type Check = { ok: boolean; label: string; note: string }
 
 /* ---------- Board Teknisi ---------- */
 
-export type ReportStatus = "baru" | "dikerjakan" | "selesai"
+export type ReportStatus = "baru" | "dikerjakan" | "eskalasi" | "selesai"
 export type Category = "Listrik" | "AC" | "Proyektor" | "Jaringan" | "Kebersihan" | "Lainnya"
 export type Tech = "joko" | "dimas"
 
@@ -66,6 +66,7 @@ export type Report = {
   assignee: string
   tech: string
   photo: string | null
+  note: string | null
   time: string
   updated: string
 }

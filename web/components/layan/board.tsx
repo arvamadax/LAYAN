@@ -3,13 +3,16 @@
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { LucideIcon } from "lucide-react"
-import { Check, ChevronDown, CircleAlert, CircleCheck, CircleEllipsis, ListFilter, Play, Projector, Snowflake, SprayCan, Users, Wifi, Zap } from "lucide-react"
+import { Check, ChevronDown, CircleAlert, CircleCheck, CircleEllipsis, ListFilter, Play, Projector, Snowflake, SprayCan, TriangleAlert, Users, Wifi, X, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { api, post } from "@/lib/api"
 import { TECHS, type Category, type Report, type ReportStatus, type Tech } from "@/lib/data"
-import { AccountPill, TopBar } from "./app-bar"
+import { AccountPill, ThemeToggle, TopBar } from "./app-bar"
+import { TechTabs } from "./tech-tabs"
 import { Mark, UrgencyBadge } from "./primitives"
 import { useStore } from "./store"
 
@@ -19,8 +22,17 @@ const CAT_ICON: Record<Category, LucideIcon> = {
 const COLUMNS: { key: ReportStatus; label: string; dot: string }[] = [
   { key: "baru", label: "Baru", dot: "var(--icon)" },
   { key: "dikerjakan", label: "Dikerjakan", dot: "#2F74E0" },
+  { key: "eskalasi", label: "Eskalasi", dot: "var(--status-rejected-dot)" },
   { key: "selesai", label: "Selesai", dot: "var(--ink)" },
 ]
+
+// Perpindahan yang diizinkan sesuai alur (docs/API.md).
+const NEXT: Record<ReportStatus, ReportStatus[]> = {
+  baru: ["dikerjakan"],
+  dikerjakan: ["selesai", "eskalasi"],
+  eskalasi: ["selesai"],
+  selesai: [],
+}
 const RANK = { Tinggi: 0, Sedang: 1, Rendah: 2 }
 
 function Meta({ r, large }: { r: Report; large?: boolean }) {
@@ -41,7 +53,7 @@ function Meta({ r, large }: { r: Report; large?: boolean }) {
   )
 }
 
-function KanbanCard({ r, onDragStart }: { r: Report; onDragStart: () => void }) {
+function KanbanCard({ r, onDragStart, onAction, busy }: { r: Report; onDragStart: () => void; onAction: (status: ReportStatus, note?: string) => void; busy: boolean }) {
   const t = TECHS[r.assignee as Tech] ?? { bg: "var(--muted)", fg: "var(--foreground)" }
   const initials = r.tech.split(" ").map((w) => w[0]).join("")
   return (
@@ -55,6 +67,7 @@ function KanbanCard({ r, onDragStart }: { r: Report; onDragStart: () => void }) 
       className={cn(
         "flex cursor-grab flex-col gap-2.5 rounded-md border bg-card p-3 hover:border-dash hover:shadow-e1 active:cursor-grabbing",
         r.status === "selesai" && "opacity-72",
+        r.status === "eskalasi" && "border-destructive-border bg-destructive-soft/40",
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -66,6 +79,12 @@ function KanbanCard({ r, onDragStart }: { r: Report; onDragStart: () => void }) 
         // eslint-disable-next-line @next/next/no-img-element -- foto dari API Rust, bukan aset statis
         <img src={`/api/attachments/${r.photo}`} alt={`Foto kerusakan ${r.room}`} className="h-[92px] w-full rounded-[8px] object-cover" draggable={false} />
       )}
+      {r.note && (
+        <span className="flex items-start gap-1.5 rounded-[8px] bg-destructive-soft px-2.5 py-2 text-xs leading-[17px] text-destructive">
+          <TriangleAlert className="mt-px size-3.5 flex-none" />
+          Eskalasi: {r.note}
+        </span>
+      )}
       <Meta r={r} />
       <div className="flex items-center gap-2 border-t pt-2.5">
         <span className="grid size-[22px] place-items-center rounded-full text-[9px] font-bold" style={{ background: t.bg, color: t.fg }}>
@@ -74,8 +93,64 @@ function KanbanCard({ r, onDragStart }: { r: Report; onDragStart: () => void }) 
         <span className="flex-1 text-xs font-medium">{r.tech}</span>
         <span className="font-mono text-[11px] text-subtle-foreground">{r.id}</span>
       </div>
+      {r.status === "baru" && (
+        <Button size="sm" onClick={() => onAction("dikerjakan")} disabled={busy}>
+          <Play />
+          Terima
+        </Button>
+      )}
+      {r.status === "dikerjakan" && (
+        <div className="grid grid-cols-2 gap-2">
+          <Button size="sm" variant="outline" onClick={() => onAction("eskalasi")} disabled={busy}>
+            <TriangleAlert />
+            Eskalasi
+          </Button>
+          <Button size="sm" onClick={() => onAction("selesai")} disabled={busy}>
+            <Check />
+            Tandai selesai
+          </Button>
+        </div>
+      )}
+      {r.status === "eskalasi" && (
+        <Button size="sm" onClick={() => onAction("selesai")} disabled={busy}>
+          <Check />
+          Tandai selesai
+        </Button>
+      )}
     </div>
   )
+}
+
+// Tombol aksi yang sama untuk kartu HP.
+function CardActions({ r, onAction, busy }: { r: Report; onAction: (status: ReportStatus, note?: string) => void; busy: boolean }) {
+  if (r.status === "baru")
+    return (
+      <Button size="lg" onClick={() => onAction("dikerjakan")} disabled={busy}>
+        <Play />
+        Terima
+      </Button>
+    )
+  if (r.status === "dikerjakan")
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        <Button size="lg" variant="outline" onClick={() => onAction("eskalasi")} disabled={busy}>
+          <TriangleAlert />
+          Eskalasi
+        </Button>
+        <Button size="lg" onClick={() => onAction("selesai")} disabled={busy}>
+          <Check />
+          Tandai selesai
+        </Button>
+      </div>
+    )
+  if (r.status === "eskalasi")
+    return (
+      <Button size="lg" onClick={() => onAction("selesai")} disabled={busy}>
+        <Check />
+        Tandai selesai
+      </Button>
+    )
+  return null
 }
 
 function Segmented<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
@@ -109,6 +184,9 @@ export function Board() {
   const [cat, setCat] = useState<Category | "Semua">("Semua")
   const [dragId, setDragId] = useState<string | null>(null)
   const [over, setOver] = useState<ReportStatus | null>(null)
+  const [reason, setReason] = useState("")
+  const [escalate, setEscalate] = useState<Report | null>(null)
+  const [busy, setBusy] = useState(false)
 
   const load = useCallback(() => api<Report[]>("/reports").then(setReports, (e: Error) => setError(e.message)), [])
   useEffect(() => {
@@ -119,21 +197,39 @@ export function Board() {
   }, [load])
 
   // Optimis: kartu langsung pindah, dikembalikan kalau API menolak.
-  async function move(id: string, status: ReportStatus) {
+  async function move(id: string, status: ReportStatus, note?: string) {
     const before = reports
-    if (before?.find((r) => r.id === id)?.status === status) return
-    setReports((rs) => rs?.map((r) => (r.id === id ? { ...r, status } : r)) ?? rs)
+    const from = before?.find((r) => r.id === id)?.status
+    if (!from || from === status) return
+    if (!NEXT[from].includes(status)) {
+      toast.error("Perpindahan tidak diizinkan", { description: "Kartu hanya boleh maju mengikuti alur: Baru → Dikerjakan → (Eskalasi) → Selesai." })
+      return
+    }
+    setBusy(true)
+    setReports((rs) => rs?.map((r) => (r.id === id ? { ...r, status, note: status === "eskalasi" ? (note ?? r.note) : r.note } : r)) ?? rs)
     try {
-      const res = await post<{ notified: number }>(`/reports/${id}/status`, { status })
+      const res = await post<{ notified: number }>(`/reports/${id}/status`, note ? { status, note } : { status })
       if (status === "selesai") {
         setJustDone((s) => new Set(s).add(id))
         toast.success(`${id} selesai`, { description: res.notified ? `${res.notified} pelapor sudah dikabari lewat chat.` : "Status tersimpan." })
+      } else if (status === "eskalasi") {
+        toast.success(`${id} dieskalasi`, { description: res.notified ? `${res.notified} pelapor sudah dikabari lewat chat.` : "Menunggu pengadaan." })
       }
     } catch (e) {
       setReports(before)
       toast.error((e as Error).message)
+    } finally {
+      setBusy(false)
     }
   }
+
+  // Tombol Eskalasi selalu lewat Dialog (alasan wajib, minimal 10 huruf — aturan API).
+  function askEscalate(r: Report) {
+    setReason("")
+    setEscalate(r)
+  }
+
+  const act = (r: Report, status: ReportStatus, note?: string) => (status === "eskalasi" && !note ? askEscalate(r) : move(r.id, status, note))
   const all = reports ?? []
   const group = (list: Report[]) =>
     COLUMNS.map((c) => {
@@ -143,6 +239,9 @@ export function Board() {
     })
 
   const desktopList = all.filter((r) => (scope === "semua" || r.assignee === me?.id) && (cat === "Semua" || r.category === cat))
+
+  // Grup kolom mobile: abaikan yang kosong supaya tidak ada judul tanpa isi.
+  const mobileGroups = group(all.filter((r) => r.assignee === me?.id)).filter((g) => g.cards.length > 0)
   const open = all.filter((r) => r.status !== "selesai")
 
   return (
@@ -150,6 +249,7 @@ export function Board() {
       {/* ---------- desktop ---------- */}
       <div className="hidden h-screen min-h-[720px] flex-col lg:flex">
         <TopBar section="Board Teknisi" themeToggle />
+        <TechTabs />
         <div className="flex flex-none items-center gap-4 px-6 pb-4 pt-5">
           <div className="flex flex-1 flex-col gap-0.5">
             <h1 className="text-[22px] font-bold tracking-[-0.01em]">Laporan kerusakan</h1>
@@ -181,7 +281,7 @@ export function Board() {
             {error}
           </p>
         )}
-        <div className={cn("grid min-h-0 flex-1 grid-cols-3 gap-4 px-6 pb-6", !reports && "animate-pulse")}>
+        <div className={cn("grid min-h-0 flex-1 grid-cols-4 gap-4 px-6 pb-6", !reports && "animate-pulse")}>
           {group(desktopList).map((col) => (
             <section
               key={col.key}
@@ -194,7 +294,12 @@ export function Board() {
               onDrop={(e) => {
                 e.preventDefault()
                 const id = e.dataTransfer.getData("text/plain") || dragId
-                if (id) move(id, col.key)
+                const r = desktopList.find((x) => x.id === id)
+                if (id && r) {
+                  // Drag ke Eskalasi selalu lewat Dialog (alasan wajib); sisanya ikut aturan NEXT (+ toast).
+                  if (col.key === "eskalasi") askEscalate(r)
+                  else move(id, col.key)
+                }
                 setOver(null)
                 setDragId(null)
               }}
@@ -207,7 +312,7 @@ export function Board() {
               </div>
               <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-auto px-2.5 pb-2.5">
                 {col.cards.map((r) => (
-                  <KanbanCard key={r.id} r={r} onDragStart={() => setDragId(r.id)} />
+                  <KanbanCard key={r.id} r={r} onDragStart={() => setDragId(r.id)} onAction={(s, n) => act(r, s, n)} busy={busy} />
                 ))}
               </div>
             </section>
@@ -215,19 +320,20 @@ export function Board() {
         </div>
       </div>
 
-      {/* ---------- mobile: tugas Pak Joko ---------- */}
+      {/* ---------- mobile: tugas teknisi ---------- */}
       <div className="mx-auto flex h-dvh max-w-[480px] flex-col bg-background sm:border-x lg:hidden">
         <header className="flex h-14 flex-none items-center gap-2.5 pl-4 pr-3">
           <Mark />
           <span className="flex-1 text-[17px] font-extrabold tracking-[0.06em]">LAYAN</span>
           <AccountPill />
+          <ThemeToggle />
         </header>
         <div className="flex flex-none flex-col gap-0.5 px-4 pb-3 pt-1">
           <h1 className="text-[22px] font-bold tracking-[-0.01em]">Tugas saya</h1>
           <span className="text-[13px] text-muted-foreground">{me?.name} · {me?.unit}</span>
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto px-4 pb-4">
-          {group(all.filter((r) => r.assignee === me?.id)).map((g) => (
+          {mobileGroups.map((g) => (
             <section key={g.key} className="flex flex-col gap-2">
               <div className="flex items-center gap-2 px-0.5">
                 <span className="size-2 rounded-full" style={{ background: g.dot }} />
@@ -235,25 +341,24 @@ export function Board() {
                 <span className="text-xs font-bold text-muted-foreground">{g.cards.length}</span>
               </div>
               {g.cards.map((r) => (
-                <div key={r.id} className="flex flex-col gap-2.5 rounded-lg border bg-card p-3.5">
+                <div key={r.id} className={cn("flex flex-col gap-2.5 rounded-lg border bg-card p-3.5", r.status === "eskalasi" && "border-destructive-border")}>
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-base font-semibold">{r.room}</span>
                     <UrgencyBadge urgency={r.urgency} large />
                   </div>
                   <span className="text-[15px] font-semibold leading-[21px]">{r.title}</span>
                   <Meta r={r} large />
-                  {r.status === "baru" && (
-                    <Button size="lg" onClick={() => move(r.id, "dikerjakan")}>
-                      <Play />
-                      Mulai kerjakan
-                    </Button>
+                  {r.photo && (
+                    // eslint-disable-next-line @next/next/no-img-element -- foto dari API Rust, bukan aset statis
+                    <img src={`/api/attachments/${r.photo}`} alt={`Foto kerusakan ${r.room}`} className="h-[140px] w-full rounded-[8px] object-cover" draggable={false} />
                   )}
-                  {r.status === "dikerjakan" && (
-                    <Button size="lg" variant="ink" onClick={() => move(r.id, "selesai")}>
-                      <Check />
-                      Tandai selesai
-                    </Button>
+                  {r.note && (
+                    <span className="flex items-start gap-1.5 rounded-[8px] bg-destructive-soft px-2.5 py-2 text-xs leading-[17px] text-destructive">
+                      <TriangleAlert className="mt-px size-3.5 flex-none" />
+                      Eskalasi: {r.note}
+                    </span>
                   )}
+                  <CardActions r={r} onAction={(s, n) => act(r, s, n)} busy={busy} />
                   {r.status === "selesai" && (
                     <span className="flex items-center gap-1.5 text-[13px] font-semibold text-ok">
                       <CircleCheck className="size-[15px]" />
@@ -266,6 +371,60 @@ export function Board() {
           ))}
         </div>
       </div>
+      <Dialog
+        open={!!escalate}
+        onOpenChange={(o) => {
+          if (!o) setEscalate(null)
+        }}
+      >
+        <DialogContent showCloseButton={false} className="w-[480px] max-w-[calc(100%-2rem)] gap-0 overflow-hidden rounded-[16px] border-0 p-0 shadow-e2 sm:max-w-[480px]">
+          <div className="flex flex-col gap-1.5 px-6 pt-[22px]">
+            <div className="flex items-start justify-between gap-4">
+              <DialogTitle className="text-lg font-bold">Eskalasi {escalate?.id}?</DialogTitle>
+              <button type="button" aria-label="Tutup" onClick={() => setEscalate(null)} className="-mr-2 -mt-1.5 grid size-11 cursor-pointer place-items-center rounded-[8px] hover:bg-muted">
+                <X className="size-4 text-muted-foreground" />
+              </button>
+            </div>
+            <DialogDescription className="text-sm leading-5 text-muted-foreground">
+              Untuk sarana yang benar-benar rusak dan perlu penggantian atau pengadaan. Pelapor dikabari lewat chat.
+            </DialogDescription>
+          </div>
+          <div className="px-6 py-[18px]">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-semibold">
+                Alasan eskalasi <span className="text-destructive">*</span>
+              </span>
+              <Textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Contoh: kompresor AC jebol, perlu ganti unit baru"
+                autoFocus
+              />
+              <span className={cn("text-xs", reason.trim() && reason.trim().length < 10 ? "font-semibold text-destructive" : "text-muted-foreground")}>
+                {reason.trim() ? `${reason.trim().length}/10 huruf minimal` : "Wajib diisi, minimal 10 huruf."}
+              </span>
+            </label>
+          </div>
+          <div className="flex justify-end gap-2 border-t bg-background px-6 py-3.5">
+            <Button variant="ghost" className="px-3.5" onClick={() => setEscalate(null)}>
+              Batal
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={reason.trim().length < 10 || busy}
+              onClick={() => {
+                const r = escalate
+                if (!r) return
+                setEscalate(null)
+                move(r.id, "eskalasi", reason.trim())
+              }}
+            >
+              <TriangleAlert />
+              Eskalasi
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

@@ -65,12 +65,12 @@ export function AccountPill() {
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
-  const dark = resolvedTheme === "dark"
   return (
     <button
       type="button"
-      aria-label={dark ? "Mode terang" : "Mode gelap"}
-      onClick={() => setTheme(dark ? "light" : "dark")}
+      aria-label="Ganti mode terang dan gelap"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      suppressHydrationWarning
       className="grid size-9 cursor-pointer place-items-center rounded-md hover:bg-muted"
     >
       {/* ikon ditukar lewat CSS agar tidak mismatch saat hydrate */}
