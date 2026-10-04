@@ -951,9 +951,9 @@ export function Landing() {
                 </span>
               </span>
             </h1>
-            <div className="mt-[clamp(22px,3.6vh,40px)] flex flex-wrap items-end justify-between gap-x-12 gap-y-6">
-              <p data-intro="2" className="m-0 max-w-[560px] text-[length:clamp(16px,1.25vw,19px)] leading-normal text-soft-foreground text-pretty">{t.heroSub}</p>
-              <div data-intro="3" className="flex flex-wrap gap-3">
+            <div className="mt-[clamp(22px,3.6vh,40px)] flex max-w-[560px] flex-col items-start gap-8">
+              <p data-intro="2" className="m-0 text-[length:clamp(16px,1.25vw,19px)] leading-normal text-soft-foreground text-pretty">{t.heroSub}</p>
+              <div data-intro="3">
                 <GoButton onClick={gate({ key: "start", path: "/app" })} className="shadow-[0_10px_30px_-12px_rgba(22,24,26,.5)]">{t.cta1}</GoButton>
               </div>
             </div>
