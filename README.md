@@ -1,10 +1,39 @@
 # LAYAN
 
-Digital campus worker. Mahasiswa mengurus layanan kampus lewat satu loket chat,
-agent AI mengerjakan langkah yang repetitif (cek syarat, isi draft, cari ruang kosong,
-gabung laporan dobel), staf cukup memutuskan, dan teknisi mengerjakan laporan.
+> Loket layanan kampus lewat satu chat. Mahasiswa meminta, agent AI mengerjakan
+> yang repetitif, staf memutuskan, teknisi mengeksekusi.
 
-Demo: https://layan.codewithus.me
+[![demo](https://img.shields.io/badge/demo-layan.codewithus.me-0A7A66)](https://layan.codewithus.me)
+![backend](https://img.shields.io/badge/backend-Rust_%2B_Axum-orange)
+![frontend](https://img.shields.io/badge/frontend-Next.js_16-black)
+![mobile](https://img.shields.io/badge/mobile-Kotlin_Compose-1D5FC7)
+![db](https://img.shields.io/badge/db-SQLite-003B57)
+
+- 🚀 Coba langsung: https://layan.codewithus.me (akun di bawah)
+- 🗺️ Rencana & progres: [PLAN.md](PLAN.md) · Kontrak API: [docs/API.md](docs/API.md) · Cara kontribusi: [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Daftar isi
+
+- [Alur 60 detik](#alur-60-detik)
+- [Tiga worker](#tiga-worker)
+- [Arsitektur](#arsitektur)
+- [Coba langsung (akun demo & juri)](#coba-langsung-akun-demo--juri)
+- [Jalankan lokal](#jalankan-lokal)
+- [Tim](#tim)
+
+## Alur 60 detik
+
+```mermaid
+flowchart LR
+    M[mahasiswa chat] --> A[Agent LAYAN]
+    A --> S[surat: cek syarat + susun draft]
+    A --> H[helpdesk: jawab + sumber]
+    A --> F[fasilitas: cek ruang + gabung laporan]
+    S --> ST[staf: setujui / tolak]
+    H --> ST
+    F --> ST
+    F --> T[teknisi: kerjakan laporan]
+```
 
 ## Tiga worker
 
@@ -17,7 +46,23 @@ Demo: https://layan.codewithus.me
 Setiap aksi agent dan manusia tercatat di audit log. Dari situ Staff Console menghitung
 berapa permintaan selesai tanpa staf dan perkiraan waktu staf yang dihemat.
 
-## Struktur
+Agent memakai LLM format chat completions (Gemini, DeepSeek, dll). Tanpa API key, agent
+tiruan berbasis aturan mengambil alih, dan juga jadi cadangan kalau LLM error atau diam.
+
+## Arsitektur
+
+```mermaid
+flowchart TB
+    PWA[PWA Next.js :3000]
+    Droid[App Android Kotlin]
+    API[API Rust Axum :8080]
+    DB[(SQLite)]
+    LLM[LLM Gemini DeepSeek mock]
+    PWA -->|cookie + proxy /api| API
+    Droid -->|token Bearer| API
+    API <--> DB
+    API <--> LLM
+```
 
 ```
 api/       Rust (Axum + SQLx + SQLite): auth, data, agent loop + tools, SSE
@@ -27,23 +72,13 @@ docs/      Kontrak API (docs/API.md)
 deploy/    systemd unit + skrip deploy ke home server (Cloudflare Tunnel)
 ```
 
-PWA dan App Android adalah dua produk terpisah yang berbagi API yang sama. Pembagian kerja: [CONTRIBUTING.md](CONTRIBUTING.md).
+PWA dan App Android adalah dua produk terpisah yang berbagi API yang sama.
 
-Agent memakai LLM format chat completions (Gemini, DeepSeek, dll). Tanpa API key, agent
-tiruan berbasis aturan mengambil alih, dan juga jadi cadangan kalau LLM error atau diam.
-
-## Menjalankan lokal
-
-```bash
-cd api && cp .env.example .env && cargo run            # API :8080, akun demo dibuat otomatis
-npm --prefix web install && npm --prefix web run dev   # PWA :3000, /api diteruskan ke Rust
-```
-
-## Akun demo & juri
+## Coba langsung (akun demo & juri)
 
 Login di `/login` (server demo: https://layan.codewithus.me/login).
 
-Akun demo lokal (password = `SEED_PASSWORD` di `api/.env`):
+Akun demo (password = `SEED_PASSWORD` di `api/.env`):
 
 | Peran | NIM / Email | Halaman |
 |---|---|---|
@@ -61,14 +96,37 @@ Password dibagikan terpisah ke masing-masing juri, tidak disimpan di repo publik
 | Juri 2 | `juri2-mhs-atxet@layan.test` | `juri2-staf-v6vy7@layan.test` | `juri2-tek-x6x6j@layan.test` |
 | Juri 3 | `juri3-mhs-yustr@layan.test` | `juri3-staf-x5k5s@layan.test` | `juri3-tek-nh54f@layan.test` |
 
-Cara kerja seed (`api/src/seed.rs`): tabel `users` hanya diisi saat masih kosong.
+<details>
+<summary><b>Dari mana akun-akun ini berasal?</b></summary>
+
+Seed (`api/src/seed.rs`) mengisi tabel `users` hanya saat masih kosong.
 Kalau file `accounts.json` ada di folder `api/` (di-gitignore, jangan commit),
 akun diambil dari file itu; kalau tidak ada, akun demo dibuat dengan satu
 `SEED_PASSWORD`. Contoh format: `api/accounts.example.json`. Daftar lengkap
 beserta password juri dan langkah pasang di server ada di `api/AKUN-juri.md`
 (lokal saja, tidak di-commit).
 
-## Android
+</details>
+
+## Jalankan lokal
+
+```bash
+cd api && cp .env.example .env && cargo run            # API :8080, akun demo dibuat otomatis
+npm --prefix web install && npm --prefix web run dev   # PWA :3000, /api diteruskan ke Rust
+```
+
+<details>
+<summary><b>Catatan Windows</b></summary>
+
+- Rust butuh linker C: pasang MSVC Build Tools, atau toolchain GNU + MinGW
+  (`winget install BrechtSanders.WinLibs.POSIX.MSVCRT`).
+- `reqwest` memakai TLS `rustls`/`aws-lc-sys` yang berat di Windows GNU;
+  untuk dev lokal boleh sementara pakai `native-tls`, jangan commit perubahan itu.
+
+</details>
+
+<details>
+<summary><b>Android</b></summary>
 
 Buka folder `android/` di Android Studio, atau:
 
@@ -76,6 +134,20 @@ Buka folder `android/` di Android Studio, atau:
 cd android && ./gradlew assembleDebug
 ```
 
-APK ada di `android/app/build/outputs/apk/debug/`. Alamat API diatur di `android/gradle.properties` (`layan.apiBase`).
+APK ada di `android/app/build/outputs/apk/debug/`. Alamat API diatur di
+`android/gradle.properties` (`layan.apiBase`).
 
-Rencana dan progres: [PLAN.md](PLAN.md). Isi Pedoman Akademik di knowledge base adalah contoh, bukan dokumen resmi.
+</details>
+
+## Tim
+
+| Area | Pemilik |
+|---|---|
+| `api/`, `android/`, `deploy/`, `docs/`, `PLAN.md`, `DEMO.md` | Arva (backend + Android) |
+| PWA mahasiswa | FE-1 |
+| Landing, Staff Console, Board Teknisi | FE-2 / Boas |
+
+Aturan main dan alur branch/PR: [CONTRIBUTING.md](CONTRIBUTING.md).
+Tugas per orang dilacak di GitHub Issues (label `boas` / `arqia` / `api`).
+
+Isi Pedoman Akademik di knowledge base adalah contoh, bukan dokumen resmi.
