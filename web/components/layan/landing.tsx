@@ -30,7 +30,7 @@ const ID = {
   h1a: "Urus layanan kampus.",
   phrases: ["Lewat satu chat.", "Tanpa antre.", "Sampai selesai."],
   heroSub: "Ajukan surat akademik, tanya aturan akademik, booking ruang, atau lapor kerusakan. Keputusan akhir tetap di staf kampus.",
-  cta1: "Mulai dengan LAYAN", cta2: "Lihat cara kerja",
+  cta1: "Mulai dengan LAYAN",
   chatStatus: "Asisten layanan kampus · aktif",
   greet1: "Halo.", greet2: "Mau urus apa hari ini?",
 
@@ -102,7 +102,7 @@ const EN: Dict = {
   h1a: "Handle campus services.",
   phrases: ["In one chat.", "No queues.", "Start to finish."],
   heroSub: "Request academic letters, ask about academic rules, book a room, or report damage. Campus staff still make the final call.",
-  cta1: "Start with LAYAN", cta2: "See how it works",
+  cta1: "Start with LAYAN",
   chatStatus: "Campus service assistant · online",
   greet1: "Hi there.", greet2: "What do you need today?",
 
@@ -955,9 +955,6 @@ export function Landing() {
               <p data-intro="2" className="m-0 max-w-[560px] text-[length:clamp(16px,1.25vw,19px)] leading-normal text-soft-foreground text-pretty">{t.heroSub}</p>
               <div data-intro="3" className="flex flex-wrap gap-3">
                 <GoButton onClick={gate({ key: "start", path: "/app" })} className="shadow-[0_10px_30px_-12px_rgba(22,24,26,.5)]">{t.cta1}</GoButton>
-                <button type="button" onClick={() => scrollToId("cara-kerja")} className={`${BTN_LINE} h-[54px] gap-2.5 px-6 text-base`}>
-                  {t.cta2}
-                </button>
               </div>
             </div>
           </div>
