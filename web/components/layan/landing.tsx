@@ -963,7 +963,7 @@ export function Landing() {
         {/* 01b Yang bisa diurus mahasiswa: minta layanan (staf) dan lapor fasilitas (teknisi), berjalan sendiri */}
         <StudentFlows lang={lang} motion={motion}>
           {/* Panduan peran: bagian dari section flows, netral, menghitam saat hover */}
-          <div data-reveal className="mt-[clamp(28px,5vh,48px)] flex flex-wrap justify-center gap-3">
+          <div data-reveal className="mt-[clamp(20px,3vh,28px)] flex flex-wrap justify-center gap-3">
             <Link href="/untuk-staf" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideStaf}</Link>
             <Link href="/untuk-teknisi" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideTek}</Link>
           </div>

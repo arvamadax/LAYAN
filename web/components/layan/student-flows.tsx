@@ -137,7 +137,7 @@ export const StudentFlows = memo(function StudentFlows({ lang, motion, children 
   const laporStep: Step = off || s.turn !== 1 ? "done" : LAPOR_STEPS[s.step][0]
 
   return (
-    <section ref={box} aria-labelledby="flows-title" className="relative px-[clamp(20px,4vw,48px)] py-[clamp(56px,10vh,112px)]">
+    <section ref={box} aria-labelledby="flows-title" className="relative px-[clamp(20px,4vw,48px)] py-[clamp(40px,7vh,80px)]">
       <div className="mx-auto w-full max-w-[1376px]">
         <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-4">
           <div className="max-w-[640px]">
@@ -148,7 +148,7 @@ export const StudentFlows = memo(function StudentFlows({ lang, motion, children 
         </div>
         <p className="sr-only">{t.sr}</p>
 
-        <div className="mt-[clamp(28px,5vh,48px)] grid select-none gap-5 lg:grid-cols-2">
+        <div className="mt-[clamp(20px,4vh,32px)] grid select-none gap-5 lg:grid-cols-2">
           <MintaCard t={t} ex={t.minta_ex[s.ia]} step={mintaStep} idle={!off && s.turn !== 0} onEnter={() => focusTurn(0)} onChip={pickMinta} />
           <LaporCard t={t} ex={t.lapor_ex[s.ib]} step={laporStep} idle={!off && s.turn !== 1} onEnter={() => focusTurn(1)} onChip={pickLapor} />
         </div>
@@ -169,11 +169,11 @@ function Shell({ title, dest, chips, chip, idle, step, ticket, back, student, de
   const label = step === "back" || step === "done" ? back : ticket
   return (
     <div onMouseEnter={onEnter} className={`flex flex-col overflow-hidden rounded-[28px] border bg-card shadow-[0_40px_90px_-60px_rgba(22,24,26,.4)] transition-opacity duration-700 ${idle ? "opacity-60" : "opacity-100"}`}>
-      <div className="flex items-center justify-between gap-3 px-6 pt-5">
+      <div className="flex items-center justify-between gap-3 px-5 pt-4">
         <span className="truncate text-[17px] font-semibold tracking-[-.01em]">{title}</span>
         <span className="shrink-0 whitespace-nowrap rounded-full bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground">→ {dest}</span>
       </div>
-      <div className="flex flex-wrap gap-1.5 px-6 pt-3">
+      <div className="flex flex-wrap gap-1.5 px-5 pt-2.5">
         {chips.map((c, i) => (
           <button
             key={c}
@@ -206,7 +206,7 @@ function Shell({ title, dest, chips, chip, idle, step, ticket, back, student, de
 
 function Rail({ out, label, active }: { out: boolean; label: string; active: boolean }) {
   return (
-    <div aria-hidden className="relative mx-6 mb-4 mt-5 h-[56px]">
+    <div aria-hidden className="relative mx-5 mb-3 mt-4 h-[56px]">
       {/* pil mengikuti lebar teksnya; spacer flex-grow menggesernya ke kanan */}
       <div className="absolute inset-x-0 top-0 flex h-6">
         <span className={`transition-[flex-grow] duration-1000 ${EASE}`} style={{ flexGrow: out ? 1 : 0, flexBasis: 0, minWidth: 0 }} />
