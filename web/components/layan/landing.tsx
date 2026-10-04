@@ -70,7 +70,7 @@ const ID = {
   finalSub: "Jelajahi tanpa akun. Masuk dengan akun kampus saat kamu siap mengajukan sesuatu.",
   guideStaf: "Panduan untuk Staf", guideTek: "Panduan untuk Teknisi",
   appAndroid: "Unduh app Android",
-  installHow: "Cara pasang di HP", moreLinks: [["Keamanan & sumber jawaban", "/keamanan"], ["Untuk staf & teknisi", "/untuk-staf"], ["FAQ", "/faq"]],
+  installHow: "Cara pasang di HP",
 
   dlBtn: "Unduh app",
   dlTitle: "Unduh LAYAN",
@@ -142,7 +142,7 @@ const EN: Dict = {
   finalSub: "Explore without an account. Sign in with your campus account when you are ready to submit something.",
   guideStaf: "Staff guide", guideTek: "Technician guide",
   appAndroid: "Download Android app",
-  installHow: "How to install", moreLinks: [["Trust & answer sources", "/keamanan"], ["For staff & technicians", "/untuk-staf"], ["FAQ", "/faq"]],
+  installHow: "How to install",
 
   dlBtn: "Get the app",
   dlTitle: "Download LAYAN",
@@ -223,7 +223,7 @@ function Icon({ d, size = 20, sw = 1.6 }: { d: string; size?: number; sw?: numbe
 const Arrow = ({ size = 18 }: { size?: number }) => <Icon d="M5 12h14M13 6l6 6-6 6" size={size} sw={1.8} />
 const Up = ({ size = 18 }: { size?: number }) => <Icon d="M12 19V5M6 11l6-6 6 6" size={size} sw={1.8} />
 const Check = ({ size = 14 }: { size?: number }) => <Icon d="M5 12.5l4.5 4.5L19 7.5" size={size} sw={2.2} />
-const Download = () => <Icon d="M12 4v11M7 10l5 5 5-5M5 20h14" size={18} sw={1.8} />
+const Download = ({ size = 20 }: { size?: number }) => <Icon d="M12 4v11M7 10l5 5 5-5M5 20h14" size={size} sw={1.8} />
 
 // track 36px, knob 16px, jarak 2px: mati = kiri 2px, nyala = kiri 18px
 const SwitchTrack = ({ on }: { on: boolean }) => (
@@ -857,7 +857,6 @@ export function Landing() {
   const link = (id: string) => (e: React.MouseEvent) => (e.preventDefault(), scrollToId(id))
 
   const navLinks = ([["layanan", t.nav.layanan, 1], ["cara-kerja", t.nav.cara, 2], ["mulai", t.nav.app, 3]] as const).map(([id, label, idx]) => ({ id, label, on: rail === idx }))
-  const dlSize = scrolled ? 44 : 52 // tombol Unduh ikut mengecil saat scroll seperti pill-nya
   const nav = scrolled
     ? { outer: "12px 12px 0", maxW: 1040, h: 58, inner: "10px", bg: "color-mix(in srgb, var(--background) 84%, transparent)", bd: "var(--border)", blur: "blur(14px) saturate(1.4)", sh: "0 12px 40px -20px rgba(22,24,26,.25)" }
     : { outer: "18px 12px 0", maxW: 1400, h: 64, inner: "clamp(8px,2vw,24px)", bg: "transparent", bd: "transparent", blur: "none", sh: "none" }
@@ -866,11 +865,10 @@ export function Landing() {
   return (
     <div ref={root} data-motion={motion} className="layan-landing min-h-dvh overflow-x-clip bg-background text-foreground antialiased selection:bg-accent [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-[3px] [&_:focus-visible]:outline-ring">
       <header className="pointer-events-none fixed inset-x-0 top-0 z-60 flex justify-center transition-[padding] duration-[450ms] ease-[cubic-bezier(.2,.7,.2,1)]" style={{ padding: nav.outer }}>
-        <div className="flex w-full items-center gap-2" style={{ maxWidth: nav.maxW }}>
         <nav
           aria-label={t.navAria}
-          className="pointer-events-auto flex min-w-0 flex-1 items-center justify-between gap-4 rounded-[18px] border transition-all duration-500 ease-[cubic-bezier(.2,.7,.2,1)]"
-          style={{ height: nav.h, padding: `0 ${nav.inner}`, background: nav.bg, borderColor: nav.bd, backdropFilter: nav.blur, WebkitBackdropFilter: nav.blur, boxShadow: nav.sh }}
+          className="pointer-events-auto flex w-full min-w-0 items-center justify-between gap-4 rounded-[18px] border transition-all duration-500 ease-[cubic-bezier(.2,.7,.2,1)]"
+          style={{ maxWidth: nav.maxW, height: nav.h, padding: `0 ${nav.inner}`, background: nav.bg, borderColor: nav.bd, backdropFilter: nav.blur, WebkitBackdropFilter: nav.blur, boxShadow: nav.sh }}
         >
           <a href="#top" onClick={link("top")} aria-label="LAYAN" className="flex shrink-0 items-center gap-2.5 text-[17px] font-extrabold tracking-[.04em] text-foreground">
             <Logo size={26} />
@@ -907,12 +905,11 @@ export function Landing() {
               <span className="h-[1.5px] w-4 bg-foreground transition-transform duration-300" style={{ transform: menu ? "translateY(3.25px) rotate(45deg)" : "none" }} />
               <span className="h-[1.5px] w-4 bg-foreground transition-transform duration-300" style={{ transform: menu ? "translateY(-3.25px) rotate(-45deg)" : "none" }} />
             </button>
+            <button type="button" onClick={openDl} aria-label={t.dlBtn} title={t.dlBtn} className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-ink text-ink-foreground shadow-e2 transition-all duration-300 hover:-translate-y-0.5 active:scale-[.97]">
+              <Download />
+            </button>
           </div>
         </nav>
-        <button type="button" onClick={openDl} aria-label={t.dlBtn} title={t.dlBtn} style={{ width: dlSize, height: dlSize }} className="pointer-events-auto flex shrink-0 cursor-pointer items-center justify-center rounded-full bg-ink text-ink-foreground shadow-[0_12px_30px_-14px_rgba(22,24,26,.5)] transition-all duration-500 ease-[cubic-bezier(.2,.7,.2,1)] hover:-translate-y-0.5 active:scale-[.97]">
-          <Download />
-        </button>
-        </div>
       </header>
       {menu && (
         <div className="fixed inset-x-3 top-[80px] z-[59] flex flex-col rounded-[20px] border bg-card p-2.5 shadow-[0_30px_60px_-30px_rgba(22,24,26,.3)] animate-[layanMsgIn_.35s_cubic-bezier(.2,.7,.2,1)_both] min-[1080px]:hidden">
@@ -969,10 +966,10 @@ export function Landing() {
         {/* 01b Yang bisa diurus mahasiswa: minta layanan (staf) dan lapor fasilitas (teknisi), berjalan sendiri */}
         <StudentFlows lang={lang} motion={motion} />
 
-        {/* 01c Panduan peran: tutorial memakai Staff Console dan Board */}
+        {/* 01c Panduan peran: netral, menghitam saat hover; tutorial memakai Staff Console dan Board */}
         <div data-reveal className="mx-auto flex w-full max-w-[1376px] flex-wrap justify-center gap-3 px-[clamp(20px,4vw,48px)] pb-[clamp(32px,6vh,64px)]">
-          <Link href="/untuk-staf" className={`${BTN_DARK} h-[54px] px-6 text-base`}>{t.guideStaf}</Link>
-          <Link href="/untuk-teknisi" className={`${BTN_LINE} h-[54px] px-6 text-base`}>{t.guideTek}</Link>
+          <Link href="/untuk-staf" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideStaf}</Link>
+          <Link href="/untuk-teknisi" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideTek}</Link>
         </div>
 
         {/* 02 Layanan */}
@@ -1021,14 +1018,6 @@ export function Landing() {
                 {t.appAndroid}
               </a>
               <Link href="/unduh" className="inline-flex h-[54px] items-center px-2 text-base font-semibold text-primary underline-offset-4 hover:underline">{t.installHow}</Link>
-            </div>
-            <div data-reveal data-delay="520" className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-[14.5px]">
-              {t.moreLinks.map(([label, href]) => (
-                <Link key={href} href={href} className="group inline-flex items-center gap-1.5 text-soft-foreground transition-colors hover:text-foreground">
-                  {label}
-                  <span className="transition-transform duration-300 group-hover:translate-x-1"><Arrow size={14} /></span>
-                </Link>
-              ))}
             </div>
           </div>
           <SiteFooter lang={lang} />

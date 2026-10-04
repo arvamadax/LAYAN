@@ -89,7 +89,7 @@ const SITE = {
 
 export function SiteFooter({ lang }: { lang: Lang }) {
   const s = SITE[lang], l = s.links
-  const links: [string, string][] = [[l.source, "https://github.com/arvamadax/LAYAN"], [s.signin, "/login"]]
+  const links: [string, string][] = [[l.source, "https://github.com/arvamadax/LAYAN"], [l.keamanan, "/keamanan"], [s.signin, "/login"]]
   return (
     <footer className={`border-t bg-panel/40 pt-14 pb-8 ${GUTTER}`}>
       <div className={`${WRAP} max-w-[1376px]`}>
