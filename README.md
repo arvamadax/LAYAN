@@ -143,8 +143,8 @@ APK ada di `android/app/build/outputs/apk/debug/`. Alamat API diatur di
 
 | Peran | Nama |
 |---|---|
-| Backend & Android | ARVA MADA JAYASTU |
-| Landing & Halaman Publik | FRISTIAN BOAS NATHANIEL |
-| Staff Console & Board Teknisi | FARREL ARZAQIA MECCA |
+| Team Lead, Full Stack Developer | ARVA MADA JAYASTU |
+| Front End Developer | FRISTIAN BOAS NATHANIEL |
+| Front End Developer | FARREL ARZAQIA MECCA |
 
 Isi Pedoman Akademik di knowledge base adalah contoh, bukan dokumen resmi.
