@@ -206,7 +206,8 @@ function Shell({ title, dest, chips, chip, idle, step, ticket, back, student, de
 
 function Rail({ out, label, active }: { out: boolean; label: string; active: boolean }) {
   return (
-    <div aria-hidden className="relative mx-5 mb-3 mt-4 h-[56px]">
+    <div aria-hidden className="mx-5 mb-3 mt-4 rounded-[16px] border bg-panel px-3 py-2">
+    <div className="relative h-[56px]">
       {/* pil mengikuti lebar teksnya; spacer flex-grow menggesernya ke kanan */}
       <div className="absolute inset-x-0 top-0 flex h-6">
         <span className={`transition-[flex-grow] duration-1000 ${EASE}`} style={{ flexGrow: out ? 1 : 0, flexBasis: 0, minWidth: 0 }} />
@@ -216,6 +217,7 @@ function Rail({ out, label, active }: { out: boolean; label: string; active: boo
       <div className={`absolute inset-x-[7px] top-[34px] h-0.5 origin-left rounded-full bg-primary transition-transform duration-1000 ${EASE}`} style={{ transform: `scaleX(${out ? 1 : 0})` }} />
       <span className={`absolute left-0 top-[28px] size-3.5 rounded-full border-2 border-primary bg-primary`} />
       <span className={`absolute right-0 top-[28px] size-3.5 rounded-full border-2 transition-colors duration-500 ${out ? "border-primary bg-primary" : "border-border bg-card"}`} />
+    </div>
     </div>
   )
 }
