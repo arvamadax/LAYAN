@@ -141,13 +141,10 @@ APK ada di `android/app/build/outputs/apk/debug/`. Alamat API diatur di
 
 ## Tim
 
-| Area | Pemilik |
+| Peran | Nama |
 |---|---|
-| `api/`, `android/`, `deploy/`, `docs/`, `PLAN.md`, `DEMO.md` | Arva (backend + Android) |
-| PWA mahasiswa | FE-1 |
-| Landing, Staff Console, Board Teknisi | FE-2 / Boas |
-
-Aturan main dan alur branch/PR: [CONTRIBUTING.md](CONTRIBUTING.md).
-Tugas per orang dilacak di GitHub Issues (label `boas` / `arqia` / `api`).
+| Backend & Android | ARVA MADA JAYASTU |
+| Landing & Halaman Publik | FRISTIAN BOAS NATHANIEL |
+| Staff Console & Board Teknisi | FARREL ARZAQIA MECCA |
 
 Isi Pedoman Akademik di knowledge base adalah contoh, bukan dokumen resmi.
