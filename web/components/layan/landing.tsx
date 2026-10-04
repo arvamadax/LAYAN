@@ -961,13 +961,13 @@ export function Landing() {
         </section>
 
         {/* 01b Yang bisa diurus mahasiswa: minta layanan (staf) dan lapor fasilitas (teknisi), berjalan sendiri */}
-        <StudentFlows lang={lang} motion={motion} />
-
-        {/* 01c Panduan peran: netral, menghitam saat hover; tutorial memakai Staff Console dan Board */}
-        <div data-reveal className="mx-auto flex w-full max-w-[1376px] flex-wrap justify-center gap-3 px-[clamp(20px,4vw,48px)] pb-[clamp(32px,6vh,64px)]">
-          <Link href="/untuk-staf" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideStaf}</Link>
-          <Link href="/untuk-teknisi" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideTek}</Link>
-        </div>
+        <StudentFlows lang={lang} motion={motion}>
+          {/* Panduan peran: bagian dari section flows, netral, menghitam saat hover */}
+          <div data-reveal className="mt-[clamp(28px,5vh,48px)] flex flex-wrap justify-center gap-3">
+            <Link href="/untuk-staf" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideStaf}</Link>
+            <Link href="/untuk-teknisi" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideTek}</Link>
+          </div>
+        </StudentFlows>
 
         {/* 02 Layanan */}
         <section id="layanan" className={`relative flex min-h-dvh flex-col justify-center pt-[max(96px,12vh)] pb-[max(40px,6vh)] ${GUTTER}`}>

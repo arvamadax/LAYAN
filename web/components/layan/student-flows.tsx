@@ -18,7 +18,7 @@ const T = {
   id: {
     kicker: "Yang bisa kamu urus",
     title: "Minta layanan atau lapor kerusakan.",
-    sub: "Cukup tulis di chat. LAYAN mengecek syaratnya, lalu meneruskan ke orang yang tepat: staf untuk permintaan, teknisi untuk kerusakan.",
+    sub: "Tulis kebutuhanmu di chat. Minta layanan: agent mengecek syarat dan menyiapkan draf, lalu staf memutuskan. Lapor kerusakan: laporan langsung masuk Board teknisi dan dikerjakan sampai selesai.",
     sr: "Animasi dua alur. Minta layanan: permintaan mahasiswa dicek LAYAN lalu disetujui staf. Lapor fasilitas: laporan kerusakan diteruskan ke board teknisi sampai selesai.",
     student: "Mahasiswa", staff: "Staf", tech: "Teknisi",
     minta: "Minta layanan", lapor: "Lapor fasilitas",
@@ -44,7 +44,7 @@ const T = {
   en: {
     kicker: "What you can handle",
     title: "Request a service or report damage.",
-    sub: "Just write in the chat. LAYAN checks the requirements, then hands it to the right people: staff for requests, technicians for damage.",
+    sub: "Describe what you need in the chat. Requesting a service: the agent checks the requirements and prepares a draft, then staff decide. Reporting damage: the report goes straight to the technician Board and gets fixed.",
     sr: "Animation of two flows. Service request: a student request is checked by LAYAN and approved by staff. Facility report: a damage report goes to the technician board until it is fixed.",
     student: "Student", staff: "Staff", tech: "Technician",
     minta: "Request a service", lapor: "Report a facility",
@@ -79,7 +79,7 @@ const DEST_STEPS: Step[] = ["review", "decided", "new", "doing", "fixed"]
 const IN = "animate-[layanMsgIn_.45s_cubic-bezier(.2,.7,.2,1)_both]"
 const EASE = "ease-[cubic-bezier(.2,.8,.2,1)]"
 
-export const StudentFlows = memo(function StudentFlows({ lang, motion }: { lang: Lang; motion: "on" | "off" }) {
+export const StudentFlows = memo(function StudentFlows({ lang, motion, children }: { lang: Lang; motion: "on" | "off"; children?: ReactNode }) {
   const t = T[lang]
   const off = motion === "off"
   // turn 0 = kartu Minta jalan, 1 = kartu Lapor jalan; ia/ib = contoh yang sedang dipakai tiap kartu
@@ -152,6 +152,7 @@ export const StudentFlows = memo(function StudentFlows({ lang, motion }: { lang:
           <MintaCard t={t} ex={t.minta_ex[s.ia]} step={mintaStep} idle={!off && s.turn !== 0} onEnter={() => focusTurn(0)} onChip={pickMinta} />
           <LaporCard t={t} ex={t.lapor_ex[s.ib]} step={laporStep} idle={!off && s.turn !== 1} onEnter={() => focusTurn(1)} onChip={pickLapor} />
         </div>
+        {children}
       </div>
     </section>
   )
