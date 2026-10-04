@@ -72,7 +72,7 @@ const SITE = {
   id: {
     lang: "Bahasa", nav: "Navigasi", signin: "Masuk", open: "Buka LAYAN",
     links: { layanan: "Layanan", cara: "Cara kerja", unduh: "Unduh app", staf: "Untuk staf", faq: "FAQ", status: "Status sistem", keamanan: "Keamanan & sumber", source: "Kode sumber" },
-    cols: ["Produk", "Bantuan", "Lainnya"],
+    col: "Lainnya",
     tagline: "Asisten layanan kampus. Satu chat untuk surat akademik, aturan akademik, booking ruang, dan laporan kerusakan.",
     made: "Dibuat untuk PENS Hackathon 2026.",
     kbNote: "Isi pedoman akademik di basis pengetahuan masih contoh, bukan dokumen resmi.",
@@ -80,7 +80,7 @@ const SITE = {
   en: {
     lang: "Language", nav: "Navigation", signin: "Sign in", open: "Open LAYAN",
     links: { layanan: "Services", cara: "How it works", unduh: "Get the app", staf: "For staff", faq: "FAQ", status: "System status", keamanan: "Trust & sources", source: "Source code" },
-    cols: ["Product", "Help", "More"],
+    col: "More",
     tagline: "Campus service assistant. One chat for academic letters, academic rules, room booking, and damage reports.",
     made: "Built for PENS Hackathon 2026.",
     kbNote: "The academic handbook in the knowledge base is sample content, not an official document.",
@@ -89,15 +89,11 @@ const SITE = {
 
 export function SiteFooter({ lang }: { lang: Lang }) {
   const s = SITE[lang], l = s.links
-  const cols: [string, [string, string][]][] = [
-    [s.cols[0], [[l.layanan, "/#layanan"], [l.cara, "/#cara-kerja"], [l.unduh, "/unduh"], [l.staf, "/untuk-staf"]]],
-    [s.cols[1], [[l.faq, "/faq"], [l.status, "/status"], [l.keamanan, "/keamanan"]]],
-    [s.cols[2], [[l.source, "https://github.com/arvamadax/LAYAN"], [s.signin, "/login"]]],
-  ]
+  const links: [string, string][] = [[l.source, "https://github.com/arvamadax/LAYAN"], [s.signin, "/login"]]
   return (
     <footer className={`border-t bg-panel/40 pt-14 pb-8 ${GUTTER}`}>
       <div className={`${WRAP} max-w-[1376px]`}>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.4fr_repeat(3,minmax(0,1fr))]">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.4fr_minmax(0,1fr)]">
           <div className="col-span-2 flex max-w-[340px] flex-col gap-3 md:col-span-1">
             <Link href="/" className="flex items-center gap-2.5 text-[16px] font-extrabold tracking-[.04em] text-foreground">
               <Logo size={24} />
@@ -105,16 +101,14 @@ export function SiteFooter({ lang }: { lang: Lang }) {
             </Link>
             <p className="m-0 text-[14px] leading-relaxed text-muted-foreground">{s.tagline}</p>
           </div>
-          {cols.map(([title, links]) => (
-            <nav key={title} aria-label={title} className="flex flex-col gap-2.5">
-              <span className="font-mono text-[11px] font-medium uppercase tracking-[.08em] text-subtle-foreground">{title}</span>
-              {links.map(([label, href]) => (
-                <Link key={href} href={href} className="w-fit text-[14.5px] text-soft-foreground transition-colors hover:text-foreground">
-                  {label}
-                </Link>
-              ))}
-            </nav>
-          ))}
+          <nav aria-label={s.col} className="flex flex-col gap-2.5">
+            <span className="font-mono text-[11px] font-medium uppercase tracking-[.08em] text-subtle-foreground">{s.col}</span>
+            {links.map(([label, href]) => (
+              <Link key={href} href={href} className="w-fit text-[14.5px] text-soft-foreground transition-colors hover:text-foreground">
+                {label}
+              </Link>
+            ))}
+          </nav>
         </div>
         <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-[13px] text-muted-foreground">
           <span>© 2026 LAYAN · {s.made}</span>
