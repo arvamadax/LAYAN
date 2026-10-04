@@ -68,6 +68,7 @@ const ID = {
 
   finalTitle: "Urusan kampus, beres dari chat.",
   finalSub: "Jelajahi tanpa akun. Masuk dengan akun kampus saat kamu siap mengajukan sesuatu.",
+  guideStaf: "Panduan untuk Staf", guideTek: "Panduan untuk Teknisi",
   appAndroid: "Unduh app Android",
   installHow: "Cara pasang di HP", moreLinks: [["Keamanan & sumber jawaban", "/keamanan"], ["Untuk staf & teknisi", "/untuk-staf"], ["FAQ", "/faq"]],
 
@@ -139,6 +140,7 @@ const EN: Dict = {
 
   finalTitle: "Campus errands, handled in a chat.",
   finalSub: "Explore without an account. Sign in with your campus account when you are ready to submit something.",
+  guideStaf: "Staff guide", guideTek: "Technician guide",
   appAndroid: "Download Android app",
   installHow: "How to install", moreLinks: [["Trust & answer sources", "/keamanan"], ["For staff & technicians", "/untuk-staf"], ["FAQ", "/faq"]],
 
@@ -966,6 +968,12 @@ export function Landing() {
 
         {/* 01b Yang bisa diurus mahasiswa: minta layanan (staf) dan lapor fasilitas (teknisi), berjalan sendiri */}
         <StudentFlows lang={lang} motion={motion} />
+
+        {/* 01c Panduan peran: tutorial memakai Staff Console dan Board */}
+        <div data-reveal className="mx-auto flex w-full max-w-[1376px] flex-wrap justify-center gap-3 px-[clamp(20px,4vw,48px)] pb-[clamp(32px,6vh,64px)]">
+          <Link href="/untuk-staf" className={`${BTN_DARK} h-[54px] px-6 text-base`}>{t.guideStaf}</Link>
+          <Link href="/untuk-teknisi" className={`${BTN_LINE} h-[54px] px-6 text-base`}>{t.guideTek}</Link>
+        </div>
 
         {/* 02 Layanan */}
         <section id="layanan" className={`relative flex min-h-dvh flex-col justify-center pt-[max(96px,12vh)] pb-[max(40px,6vh)] ${GUTTER}`}>
