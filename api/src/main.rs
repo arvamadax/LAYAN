@@ -2,6 +2,7 @@ mod admin;
 mod agent;
 mod app_update;
 mod auth;
+mod backup;
 mod board;
 mod chat;
 mod error;
@@ -78,6 +79,7 @@ async fn main() -> anyhow::Result<()> {
 
     let llm = llm::Llm::from_env();
     println!("LLM: {}", llm.name());
+    backup::spawn(db.clone(), env_or("BACKUP_DIR", "backups"));
     let state = AppState {
         db,
         cookie_secure: env_or("COOKIE_SECURE", "0") == "1",

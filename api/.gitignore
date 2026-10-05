@@ -5,6 +5,7 @@
 *.db-wal
 *.bak
 /uploads
+/backups
 /releases
 
 /accounts.json

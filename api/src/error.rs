@@ -3,6 +3,7 @@ use serde_json::json;
 
 pub enum AppError {
     BadLogin,
+    TooMany,
     Unauthorized,
     Forbidden,
     NotFound,
@@ -27,6 +28,7 @@ impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         let (status, msg) = match self {
             Self::BadLogin => (StatusCode::UNAUTHORIZED, "NIM/email atau password salah.".into()),
+            Self::TooMany => (StatusCode::TOO_MANY_REQUESTS, "Terlalu banyak percobaan masuk. Coba lagi dalam 10 menit.".into()),
             Self::Unauthorized => (StatusCode::UNAUTHORIZED, "Sesi berakhir. Silakan masuk lagi.".into()),
             Self::Forbidden => (StatusCode::FORBIDDEN, "Kamu tidak punya akses ke halaman ini.".into()),
             Self::NotFound => (StatusCode::NOT_FOUND, "Data tidak ditemukan.".into()),

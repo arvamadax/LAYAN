@@ -132,6 +132,23 @@ pub async fn log_access(db: &sqlx::SqlitePool, user: Option<&str>, h: &axum::htt
     }
 }
 
+/// Batas login gagal per IP dalam 10 menit.
+pub const LOGIN_MAX_FAILS: i64 = 10;
+
+/// True kalau IP ini sudah terlalu sering gagal login. IP tak dikenal ("-") tidak dibatasi,
+/// supaya satu header yang hilang tidak mengunci semua orang sekaligus.
+pub async fn login_throttled(db: &sqlx::SqlitePool, h: &axum::http::HeaderMap) -> bool {
+    let ip = client_ip(h);
+    if ip == "-" {
+        return false;
+    }
+    sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM access_log WHERE action = 'login_gagal' AND ip = ?1 AND at > unixepoch() - 600")
+        .bind(ip)
+        .fetch_one(db)
+        .await
+        .is_ok_and(|n| n >= LOGIN_MAX_FAILS)
+}
+
 /// Hex acak kriptografis, dipakai untuk token sesi dan id lampiran.
 pub fn random_hex(bytes: usize) -> String {
     use argon2::password_hash::rand_core::{OsRng, RngCore};
@@ -156,5 +173,24 @@ mod tests {
         assert_eq!(weekday(20_725), 2); // Selasa
         assert_eq!(parse_iso("2026-13-01"), None);
     }
-}
 
+    #[tokio::test]
+    async fn login_throttle_per_ip() {
+        use axum::http::HeaderMap;
+        let db = sqlx::sqlite::SqlitePoolOptions::new().max_connections(1).connect("sqlite::memory:").await.unwrap();
+        sqlx::migrate!().run(&db).await.unwrap();
+        let ip = |v: &str| {
+            let mut h = HeaderMap::new();
+            h.insert("cf-connecting-ip", v.parse().unwrap());
+            h
+        };
+        let (a, b) = (ip("1.2.3.4"), ip("5.6.7.8"));
+        for _ in 0..LOGIN_MAX_FAILS {
+            assert!(!login_throttled(&db, &a).await);
+            log_access(&db, None, &a, "login_gagal", "x").await;
+        }
+        assert!(login_throttled(&db, &a).await);
+        assert!(!login_throttled(&db, &b).await);
+        assert!(!login_throttled(&db, &HeaderMap::new()).await);
+    }
+}

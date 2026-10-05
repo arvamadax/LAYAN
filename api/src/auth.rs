@@ -110,9 +110,12 @@ async fn fetch_user(db: &SqlitePool, id: &str) -> Result<User, AppError> {
 
 #[utoipa::path(
     post, path = "/api/auth/login", request_body = LoginReq,
-    responses((status = 200, body = LoginRes), (status = 401, description = "NIM/email atau password salah"))
+    responses((status = 200, body = LoginRes), (status = 401, description = "NIM/email atau password salah"), (status = 429, description = "Terlalu banyak login gagal dari IP ini"))
 )]
 pub async fn login(State(s): State<AppState>, headers: HeaderMap, Json(req): Json<LoginReq>) -> Result<impl IntoResponse, AppError> {
+    if crate::util::login_throttled(&s.db, &headers).await {
+        return Err(AppError::TooMany);
+    }
     let row: Option<(String, String)> =
         sqlx::query_as("SELECT id, password_hash FROM users WHERE email = ?1 OR nim = ?1")
             .bind(req.identifier.trim())
