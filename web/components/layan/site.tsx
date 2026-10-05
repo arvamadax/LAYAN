@@ -71,7 +71,7 @@ export const BTN_LINE = "inline-flex h-12 cursor-pointer items-center gap-2.5 wh
 const SITE = {
   id: {
     lang: "Bahasa", nav: "Navigasi", signin: "Masuk", open: "Buka LAYAN",
-    links: { layanan: "Layanan", cara: "Cara kerja", unduh: "Unduh app", staf: "Untuk staf", faq: "FAQ", status: "Status sistem", keamanan: "Keamanan & sumber", source: "Kode sumber" },
+    links: { layanan: "Layanan", cara: "Cara kerja", unduh: "Unduh app", staf: "Untuk staf", tek: "Untuk teknisi", faq: "FAQ", status: "Status sistem", keamanan: "Keamanan & sumber", source: "Kode sumber" },
     col: "Lainnya",
     tagline: "Asisten layanan kampus. Satu chat untuk surat akademik, aturan akademik, booking ruang, dan laporan kerusakan.",
     made: "Dibuat untuk PENS Hackathon 2026.",
@@ -79,7 +79,7 @@ const SITE = {
   },
   en: {
     lang: "Language", nav: "Navigation", signin: "Sign in", open: "Open LAYAN",
-    links: { layanan: "Services", cara: "How it works", unduh: "Get the app", staf: "For staff", faq: "FAQ", status: "System status", keamanan: "Trust & sources", source: "Source code" },
+    links: { layanan: "Services", cara: "How it works", unduh: "Get the app", staf: "For staff", tek: "For technicians", faq: "FAQ", status: "System status", keamanan: "Trust & sources", source: "Source code" },
     col: "More",
     tagline: "Campus service assistant. One chat for academic letters, academic rules, room booking, and damage reports.",
     made: "Built for PENS Hackathon 2026.",
@@ -89,7 +89,7 @@ const SITE = {
 
 export function SiteFooter({ lang }: { lang: Lang }) {
   const s = SITE[lang], l = s.links
-  const links: [string, string][] = [[l.source, "https://github.com/arvamadax/LAYAN"], [s.signin, "/login"]]
+  const links: [string, string][] = [[l.source, "https://github.com/arvamadax/LAYAN"], [l.keamanan, "/keamanan"], [s.signin, "/login"]]
   return (
     <footer className={`border-t bg-panel/40 pt-14 pb-8 ${GUTTER}`}>
       <div className={`${WRAP} max-w-[1376px]`}>
@@ -123,7 +123,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
 export function SitePage({ lang, kicker, title, sub, children }: { lang: Lang; kicker: string; title: string; sub: string; children: ReactNode }) {
   const { me } = useStore()
   const s = SITE[lang], l = s.links
-  const links: [string, string][] = [[l.layanan, "/#layanan"], [l.unduh, "/unduh"], [l.staf, "/untuk-staf"], [l.faq, "/faq"], [l.status, "/status"]]
+  const links: [string, string][] = [[l.layanan, "/#layanan"], [l.unduh, "/unduh"], [l.staf, "/untuk-staf"], [l.tek, "/untuk-teknisi"], [l.faq, "/faq"], [l.status, "/status"]]
   return (
     <div className="min-h-dvh bg-background text-foreground antialiased selection:bg-accent [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-[3px] [&_:focus-visible]:outline-ring">
       <header className={`sticky top-0 z-50 border-b bg-background/85 backdrop-blur-md ${GUTTER}`}>

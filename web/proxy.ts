@@ -10,7 +10,7 @@ const AREA: [string, Role][] = [
   ["/admin", "admin"],
 ]
 
-const PUBLIC = new Set(["/", "/faq", "/unduh", "/status", "/keamanan", "/untuk-staf"])
+const PUBLIC = new Set(["/", "/faq", "/unduh", "/status", "/keamanan", "/untuk-staf", "/untuk-teknisi"])
 
 export async function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl

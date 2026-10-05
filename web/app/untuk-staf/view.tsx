@@ -1,14 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { Block, BTN_DARK, BTN_LINE, CheckIcon, SitePage, useLang } from "@/components/layan/site"
+import { Block, BTN_DARK, CheckIcon, SitePage, useLang } from "@/components/layan/site"
 
-// Mock di halaman ini meniru Staff Console (components/layan/staff-console.tsx) dan Board (board.tsx), datanya contoh.
+// Tutorial Staff Console. Label mengikuti aplikasi setelah issue Arqia (#6):
+// Antrean, Metrik, Setujui, Tolak, Balas, Batalkan.
 const T = {
   id: {
-    kicker: "Untuk staf & teknisi",
+    kicker: "Untuk staf",
     title: "Staf cukup memutuskan.",
-    sub: "Agent mengerjakan langkah yang berulang: cek syarat, isi draf, cari ruang, gabung laporan dobel. Staf dan teknisi menerima pekerjaan yang sudah rapi.",
+    sub: "Agent mengerjakan langkah yang berulang: cek syarat, isi draf, cari ruang. Staf menerima pekerjaan yang sudah rapi, lalu memutuskan di tab Antrean.",
     cmpTitle: "Dulu dan dengan LAYAN",
     cmpHead: ["Layanan", "Dulu", "Dengan LAYAN"],
     cmp: [
@@ -23,18 +24,23 @@ const T = {
     queue: [["Rina Ayu", "Surat dispensasi", "2 mnt"], ["Bagas P.", "Booking G2.4", "9 mnt"], ["Dewi S.", "Tiket akademik", "14 mnt"]],
     checks: ["Status aktif", "UKT lunas", "Lampiran ada"],
     approve: "Setujui", reject: "Tolak",
-    boardTitle: "Board Teknisi",
-    boardSub: "Laporan kerusakan dari chat langsung jadi kartu, lengkap dengan ruang, kategori, urgensi, dan jumlah pelapor.",
-    cols: ["Baru", "Dikerjakan", "Selesai"],
-    cards: [[0, "Proyektor mati", "F2.3", "Sedang", 3], [0, "AC bocor", "G1.2", "Tinggi", 1], [1, "Wi-Fi putus", "F3.1", "Sedang", 2], [2, "Lampu kedip", "G2.4", "Rendah", 1]] as [number, string, string, string, number][],
-    reporters: "pelapor",
     sample: "Contoh tampilan",
-    staff: "Masuk sebagai staf", tech: "Masuk sebagai teknisi",
+    stepsTitle: "Cara memakai dalam 7 langkah",
+    steps: [
+      ["Masuk dengan akun staf", "Buka halaman Masuk, lalu masuk dengan akun staf. Kamu langsung diarahkan ke tab Antrean."],
+      ["Buka tab Antrean", "Daftar permintaan terurut dari yang paling lama menunggu. Tiap baris menampilkan jenis, nama, prodi, dan lama menunggu. Tab Semua, Surat, Tiket, dan Booking punya badge jumlah, plus kolom cari nama atau NIM."],
+      ["Pilih satu permintaan", "Item yang sedang dibuka terlihat jelas aktif. Di HP, ketuk item untuk membuka detail, lalu pakai tombol kembali untuk ke antrean."],
+      ["Baca cek syarat, lampiran, dan preview surat", "Satu kartu berisi hasil cek syarat oleh agent, lampiran dari mahasiswa, dan preview draf surat yang sudah disusun."],
+      ["Putuskan: Setujui, Tolak, atau Balas", "Setujui untuk menerbitkan surat. Tolak wajib disertai alasan. Tiket akademik dijawab dengan Balas."],
+      ["Batalkan untuk membatalkan keputusan", "Keputusan yang baru diambil bisa dibatalkan lewat toast Batalkan."],
+      ["Buka tab Metrik", "Ringkasan hasil kerja agent: berapa permintaan selesai otomatis, perkiraan waktu staf yang dihemat, dan token AI per permintaan."],
+    ] as [string, string][],
+    staff: "Masuk sebagai staf",
   },
   en: {
-    kicker: "For staff & technicians",
+    kicker: "For staff",
     title: "Staff just decide.",
-    sub: "The agent does the repetitive steps: checking requirements, drafting, finding rooms, merging duplicate reports. Staff and technicians receive work that is already organized.",
+    sub: "The agent does the repetitive steps: checking requirements, drafting, finding rooms. Staff receive work that is already organized, then decide in the Queue tab.",
     cmpTitle: "Before and with LAYAN",
     cmpHead: ["Service", "Before", "With LAYAN"],
     cmp: [
@@ -49,18 +55,20 @@ const T = {
     queue: [["Rina Ayu", "Dispensation letter", "2 min"], ["Bagas P.", "Booking G2.4", "9 min"], ["Dewi S.", "Academic ticket", "14 min"]],
     checks: ["Active status", "Tuition paid", "Attachment present"],
     approve: "Approve", reject: "Reject",
-    boardTitle: "Technician Board",
-    boardSub: "Damage reports from the chat become cards right away, with room, category, urgency, and reporter count.",
-    cols: ["New", "In progress", "Done"],
-    cards: [[0, "Projector broken", "F2.3", "Medium", 3], [0, "AC leaking", "G1.2", "High", 1], [1, "Wi-Fi down", "F3.1", "Medium", 2], [2, "Flickering light", "G2.4", "Low", 1]] as [number, string, string, string, number][],
-    reporters: "reporters",
     sample: "Sample view",
-    staff: "Sign in as staff", tech: "Sign in as technician",
+    stepsTitle: "How to use it in 7 steps",
+    steps: [
+      ["Sign in with a staff account", "Open the sign-in page and sign in with a staff account. You land straight on the Queue tab."],
+      ["Open the Queue tab", "Requests are sorted by longest waiting time. Each row shows the type, name, study program, and waiting time. The All, Letters, Tickets, and Bookings tabs have count badges, plus a name-or-ID search box."],
+      ["Pick one request", "The open item is clearly highlighted. On phones, tap an item to open its detail, then use the back button to return to the queue."],
+      ["Read the requirement check, attachments, and letter preview", "One card holds the agent's requirement check, the student's attachments, and the drafted letter preview."],
+      ["Decide: Approve, Reject, or Reply", "Approve to issue the letter. Rejecting requires a reason. Academic tickets are answered with Reply."],
+      ["Undo a decision", "A decision you just made can be undone from the Undo toast."],
+      ["Open the Metrics tab", "A summary of the agent's work: how many requests finished automatically, estimated staff time saved, and AI tokens per request."],
+    ] as [string, string][],
+    staff: "Sign in as staff",
   },
 }
-
-const URGENCY = ["bg-muted text-muted-foreground", "bg-warn-bg text-warn", "bg-destructive/10 text-destructive"]
-const urgencyOf = (u: string) => URGENCY[["Rendah", "Low"].includes(u) ? 0 : ["Tinggi", "High"].includes(u) ? 2 : 1]
 
 export function StafView() {
   const lang = useLang()
@@ -130,30 +138,20 @@ export function StafView() {
         </div>
       </Block>
 
-      <Block title={t.boardTitle} sub={t.boardSub}>
-        <div aria-label={t.sample} className="grid gap-3 md:grid-cols-3">
-          {t.cols.map((col, ci) => (
-            <div key={col} className="flex flex-col gap-2.5 rounded-[22px] bg-muted p-3">
-              <span className="flex items-center justify-between px-1.5 pt-1 text-[13px] font-semibold">
-                {col}
-                <span className="font-mono text-[11.5px] text-muted-foreground">{t.cards.filter((c) => c[0] === ci).length}</span>
+      <Block title={t.stepsTitle}>
+        <ol className="m-0 grid list-none gap-3 p-0 md:grid-cols-2">
+          {t.steps.map(([title, desc], i) => (
+            <li key={title} className="flex gap-4 rounded-[20px] border bg-card p-5">
+              <span aria-hidden className="font-mono text-xs font-medium text-primary">0{i + 1}</span>
+              <span className="flex flex-col gap-1.5">
+                <span className="text-[16px] font-semibold">{title}</span>
+                <span className="text-[14.5px] leading-relaxed text-muted-foreground">{desc}</span>
               </span>
-              {t.cards.filter((c) => c[0] === ci).map(([, title, room, urgency, n]) => (
-                <div key={title} className="flex flex-col gap-2 rounded-[16px] border bg-card p-3.5">
-                  <span className="text-[14.5px] font-semibold">{title}</span>
-                  <span className="flex flex-wrap items-center gap-2 text-[12px]">
-                    <span className="rounded-md bg-accent px-2 py-0.5 font-mono font-medium text-accent-foreground">{room}</span>
-                    <span className={`rounded-full px-2 py-0.5 font-medium ${urgencyOf(urgency)}`}>{urgency}</span>
-                    {n > 1 && <span className="text-muted-foreground">{n} {t.reporters}</span>}
-                  </span>
-                </div>
-              ))}
-            </div>
+            </li>
           ))}
-        </div>
+        </ol>
         <div className="mt-10 flex flex-wrap gap-3">
           <Link href="/login?next=%2Fstaf" className={BTN_DARK}>{t.staff}</Link>
-          <Link href="/login?next=%2Fteknisi" className={BTN_LINE}>{t.tech}</Link>
         </div>
       </Block>
     </SitePage>

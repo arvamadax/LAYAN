@@ -18,7 +18,7 @@ const T = {
   id: {
     kicker: "Yang bisa kamu urus",
     title: "Minta layanan atau lapor kerusakan.",
-    sub: "Cukup tulis di chat. LAYAN mengecek syaratnya, lalu meneruskan ke orang yang tepat: staf untuk permintaan, teknisi untuk kerusakan.",
+    sub: "Tulis kebutuhanmu di chat. Minta layanan: agent mengecek syarat dan menyiapkan draf, lalu staf memutuskan. Lapor kerusakan: laporan langsung masuk Board teknisi dan dikerjakan sampai selesai.",
     sr: "Animasi dua alur. Minta layanan: permintaan mahasiswa dicek LAYAN lalu disetujui staf. Lapor fasilitas: laporan kerusakan diteruskan ke board teknisi sampai selesai.",
     student: "Mahasiswa", staff: "Staf", tech: "Teknisi",
     minta: "Minta layanan", lapor: "Lapor fasilitas",
@@ -44,7 +44,7 @@ const T = {
   en: {
     kicker: "What you can handle",
     title: "Request a service or report damage.",
-    sub: "Just write in the chat. LAYAN checks the requirements, then hands it to the right people: staff for requests, technicians for damage.",
+    sub: "Describe what you need in the chat. Requesting a service: the agent checks the requirements and prepares a draft, then staff decide. Reporting damage: the report goes straight to the technician Board and gets fixed.",
     sr: "Animation of two flows. Service request: a student request is checked by LAYAN and approved by staff. Facility report: a damage report goes to the technician board until it is fixed.",
     student: "Student", staff: "Staff", tech: "Technician",
     minta: "Request a service", lapor: "Report a facility",
@@ -79,7 +79,7 @@ const DEST_STEPS: Step[] = ["review", "decided", "new", "doing", "fixed"]
 const IN = "animate-[layanMsgIn_.45s_cubic-bezier(.2,.7,.2,1)_both]"
 const EASE = "ease-[cubic-bezier(.2,.8,.2,1)]"
 
-export const StudentFlows = memo(function StudentFlows({ lang, motion }: { lang: Lang; motion: "on" | "off" }) {
+export const StudentFlows = memo(function StudentFlows({ lang, motion, children }: { lang: Lang; motion: "on" | "off"; children?: ReactNode }) {
   const t = T[lang]
   const off = motion === "off"
   // turn 0 = kartu Minta jalan, 1 = kartu Lapor jalan; ia/ib = contoh yang sedang dipakai tiap kartu
@@ -137,7 +137,7 @@ export const StudentFlows = memo(function StudentFlows({ lang, motion }: { lang:
   const laporStep: Step = off || s.turn !== 1 ? "done" : LAPOR_STEPS[s.step][0]
 
   return (
-    <section ref={box} aria-labelledby="flows-title" className="relative px-[clamp(20px,4vw,48px)] py-[clamp(56px,10vh,112px)]">
+    <section ref={box} aria-labelledby="flows-title" className="relative px-[clamp(20px,4vw,48px)] py-[clamp(40px,7vh,80px)]">
       <div className="mx-auto w-full max-w-[1376px]">
         <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-4">
           <div className="max-w-[640px]">
@@ -148,10 +148,11 @@ export const StudentFlows = memo(function StudentFlows({ lang, motion }: { lang:
         </div>
         <p className="sr-only">{t.sr}</p>
 
-        <div className="mt-[clamp(28px,5vh,48px)] grid select-none gap-5 lg:grid-cols-2">
+        <div className="mt-[clamp(20px,4vh,32px)] grid select-none gap-5 lg:grid-cols-2">
           <MintaCard t={t} ex={t.minta_ex[s.ia]} step={mintaStep} idle={!off && s.turn !== 0} onEnter={() => focusTurn(0)} onChip={pickMinta} />
           <LaporCard t={t} ex={t.lapor_ex[s.ib]} step={laporStep} idle={!off && s.turn !== 1} onEnter={() => focusTurn(1)} onChip={pickLapor} />
         </div>
+        {children}
       </div>
     </section>
   )
@@ -168,11 +169,11 @@ function Shell({ title, dest, chips, chip, idle, step, ticket, back, student, de
   const label = step === "back" || step === "done" ? back : ticket
   return (
     <div onMouseEnter={onEnter} className={`flex flex-col overflow-hidden rounded-[28px] border bg-card shadow-[0_40px_90px_-60px_rgba(22,24,26,.4)] transition-opacity duration-700 ${idle ? "opacity-60" : "opacity-100"}`}>
-      <div className="flex items-center justify-between gap-3 px-6 pt-5">
+      <div className="flex items-center justify-between gap-3 px-5 pt-4">
         <span className="truncate text-[17px] font-semibold tracking-[-.01em]">{title}</span>
         <span className="shrink-0 whitespace-nowrap rounded-full bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-foreground">→ {dest}</span>
       </div>
-      <div className="flex flex-wrap gap-1.5 px-6 pt-3">
+      <div className="flex flex-wrap gap-1.5 px-5 pt-2.5">
         {chips.map((c, i) => (
           <button
             key={c}
@@ -205,7 +206,8 @@ function Shell({ title, dest, chips, chip, idle, step, ticket, back, student, de
 
 function Rail({ out, label, active }: { out: boolean; label: string; active: boolean }) {
   return (
-    <div aria-hidden className="relative mx-6 mb-4 mt-5 h-[56px]">
+    <div aria-hidden className="mx-5 mb-3 mt-4 rounded-[16px] border bg-panel px-3 py-2">
+    <div className="relative h-[56px]">
       {/* pil mengikuti lebar teksnya; spacer flex-grow menggesernya ke kanan */}
       <div className="absolute inset-x-0 top-0 flex h-6">
         <span className={`transition-[flex-grow] duration-1000 ${EASE}`} style={{ flexGrow: out ? 1 : 0, flexBasis: 0, minWidth: 0 }} />
@@ -215,6 +217,7 @@ function Rail({ out, label, active }: { out: boolean; label: string; active: boo
       <div className={`absolute inset-x-[7px] top-[34px] h-0.5 origin-left rounded-full bg-primary transition-transform duration-1000 ${EASE}`} style={{ transform: `scaleX(${out ? 1 : 0})` }} />
       <span className={`absolute left-0 top-[28px] size-3.5 rounded-full border-2 border-primary bg-primary`} />
       <span className={`absolute right-0 top-[28px] size-3.5 rounded-full border-2 transition-colors duration-500 ${out ? "border-primary bg-primary" : "border-border bg-card"}`} />
+    </div>
     </div>
   )
 }
