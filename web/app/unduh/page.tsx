@@ -3,7 +3,7 @@ import { UnduhView } from "./view"
 
 export const metadata: Metadata = {
   title: "Unduh app | LAYAN",
-  description: "Pasang LAYAN dari browser sebagai PWA atau unduh App Android.",
+  description: "Tutorial pasang LAYAN di Windows, iPhone, dan Android: PWA dari browser atau App Android untuk mahasiswa.",
 }
 
 export default function Page() {
