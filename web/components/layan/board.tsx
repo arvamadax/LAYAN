@@ -328,7 +328,8 @@ export function Board() {
           <AccountPill />
           <ThemeToggle />
         </header>
-        <div className="flex flex-none flex-col gap-0.5 px-4 pb-3 pt-1">
+        <TechTabs />
+        <div className="flex flex-none flex-col gap-0.5 px-4 pb-3 pt-3">
           <h1 className="text-[22px] font-bold tracking-[-0.01em]">Tugas saya</h1>
           <span className="text-[13px] text-muted-foreground">{me?.name} · {me?.unit}</span>
         </div>

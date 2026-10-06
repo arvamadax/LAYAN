@@ -180,6 +180,7 @@ function Trend({ days }: { days: Day[] }) {
 export function StaffMetrics() {
   const [m, setM] = useState<Metrics | null>(null)
   const [days, setDays] = useState<Day[] | null>(null)
+  const [daysError, setDaysError] = useState("")
   const [waiting, setWaiting] = useState<number | null>(null)
   const [error, setError] = useState("")
   const [updated, setUpdated] = useState("")
@@ -192,15 +193,23 @@ export function StaffMetrics() {
       (qq) => alive && setWaiting(qq.length),
       () => alive && setWaiting(null),
     )
-    Promise.all([api<Metrics>("/staff/metrics"), api<Day[]>("/staff/metrics/daily?days=30")]).then(
-      ([mm, dd]) => {
+    api<Metrics>("/staff/metrics").then(
+      (mm) => {
         if (!alive) return
         setM(mm)
-        setDays(dd)
         setError("")
         setUpdated(todayID().time)
       },
       (e: Error) => alive && setError(e.message),
+    )
+    // Tren harian gagal tidak boleh menjatuhkan ringkasan: error-nya tampil di kartu tren saja.
+    api<Day[]>("/staff/metrics/daily?days=30").then(
+      (dd) => {
+        if (!alive) return
+        setDays(dd)
+        setDaysError("")
+      },
+      (e: Error) => alive && setDaysError(e.message),
     )
     return () => {
       alive = false
@@ -234,7 +243,7 @@ export function StaffMetrics() {
           <button
             type="button"
             onClick={() => setSpin((x) => x + 1)}
-            className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-input bg-card px-3.5 text-[13px] font-semibold transition-colors hover:border-foreground"
+            className="inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-full border border-input bg-card px-3.5 text-[13px] font-semibold transition-colors hover:border-foreground"
           >
             <RefreshCw className="size-4" />
             Perbarui
@@ -254,7 +263,7 @@ export function StaffMetrics() {
                 { label: "Rata-rata waktu proses", value: m.avg_minutes != null ? `${m.avg_minutes} mnt` : "–", note: "masuk sampai siap diputuskan" },
                 { label: "Selesai otomatis", value: `${m.auto_pct}%`, note: `${m.auto} dari ${m.handled} tanpa staf` },
                 { label: "Waktu staf dihemat", value: hours(m.saved_minutes), note: "estimasi dari audit log" },
-                { label: "Token AI per permintaan", value: m.tokens.per_request ? m.tokens.per_request.toLocaleString("id-ID") : "–", note: `${m.tokens.calls} panggilan LLM${m.tokens.cache_pct > 0 ? ` · ${m.tokens.cache_pct}% dari cache` : ""}` },
+                { label: "Token AI per permintaan", value: m.tokens.per_request ? m.tokens.per_request.toLocaleString("id-ID") : "–", note: `${(m.tokens.input + m.tokens.output).toLocaleString("id-ID")} token · ${m.tokens.calls} panggilan LLM${m.tokens.cache_pct > 0 ? ` · ${m.tokens.cache_pct}% dari cache` : ""}` },
                 { label: "Menunggu persetujuan", value: waiting ?? "–", note: waiting === 0 ? "antrean kosong" : "di antrean sekarang" },
               ]
             : Array.from({ length: 6 }, () => null)).map((c, i) =>
@@ -283,7 +292,12 @@ export function StaffMetrics() {
         </Card>
 
         <Card title="Tren harian · 30 hari">
-          {days ? (
+          {daysError ? (
+            <p role="alert" className="flex items-start gap-2 text-sm text-destructive">
+              <CircleAlert className="mt-0.5 size-4 flex-none" />
+              Tren harian belum bisa dimuat: {daysError}
+            </p>
+          ) : days ? (
             days.every((d) => d.total === 0) ? (
               <p className="text-sm text-muted-foreground">Belum ada permintaan dalam 30 hari terakhir.</p>
             ) : (

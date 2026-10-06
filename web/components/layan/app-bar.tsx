@@ -71,7 +71,7 @@ export function ThemeToggle() {
       aria-label="Ganti mode terang dan gelap"
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
       suppressHydrationWarning
-      className="grid size-9 cursor-pointer place-items-center rounded-md hover:bg-muted"
+      className="grid size-11 cursor-pointer place-items-center rounded-md hover:bg-muted lg:size-9"
     >
       {/* ikon ditukar lewat CSS agar tidak mismatch saat hydrate */}
       <Moon className="size-[18px] dark:hidden" />
