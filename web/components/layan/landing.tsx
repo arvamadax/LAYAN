@@ -892,7 +892,7 @@ export function Landing() {
             <ThemeToggle />
             <div role="group" aria-label={t.langLabel} className="hidden rounded-full border bg-card/60 p-1 min-[1080px]:flex">
               {(["id", "en"] as const).map((l) => (
-                <button key={l} type="button" onClick={() => setLang(l)} aria-pressed={lang === l} className={`h-9 min-w-11 cursor-pointer rounded-full px-3 font-mono text-xs font-medium uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                <button key={l} type="button" onClick={() => setLang(l)} aria-pressed={lang === l} className={`h-9 min-w-11 cursor-pointer rounded-full px-3 text-xs font-semibold uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                   {l}
                 </button>
               ))}
@@ -923,7 +923,7 @@ export function Landing() {
           </Link>
           <div role="group" aria-label={t.langLabel} className="mt-1 flex gap-1 rounded-2xl border bg-card/60 p-1.5">
             {(["id", "en"] as const).map((l) => (
-              <button key={l} type="button" onClick={() => { setLang(l); setMenu(false) }} aria-pressed={lang === l} className={`h-11 flex-1 cursor-pointer rounded-xl font-mono text-xs font-medium uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              <button key={l} type="button" onClick={() => { setLang(l); setMenu(false) }} aria-pressed={lang === l} className={`h-11 flex-1 cursor-pointer rounded-xl text-xs font-semibold uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 {l === "id" ? "Indonesia" : "English"}
               </button>
             ))}

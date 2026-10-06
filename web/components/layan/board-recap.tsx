@@ -34,7 +34,7 @@ function Summary({ label, value, note }: { label: string; value: React.ReactNode
   return (
     <div className="flex flex-col gap-1 rounded-[12px] border bg-card px-4 py-3.5">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <span className="font-mono text-[26px] font-bold leading-[30px] tracking-[-0.02em]">{value}</span>
+      <span className="font-mono text-[26px] font-medium leading-[30px] tracking-[-0.02em]">{value}</span>
       <span className="text-xs text-muted-foreground">{note}</span>
     </div>
   )
@@ -206,7 +206,7 @@ export function BoardRecap() {
                       {rooms.map(([room, list]) => (
                         <Fragment key={room}>
                           <tr className="border-b bg-muted/40">
-                            <th scope="rowgroup" colSpan={8} className="px-3 py-2 font-mono text-[13px] font-bold">
+                            <th scope="rowgroup" colSpan={8} className="px-3 py-2 font-mono text-[13px] font-medium">
                               {room} <span className="font-sans font-medium text-muted-foreground">· {list.length} laporan</span>
                             </th>
                           </tr>

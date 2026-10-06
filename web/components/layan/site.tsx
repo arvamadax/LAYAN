@@ -53,7 +53,7 @@ export function LangSwitch({ lang, label }: { lang: Lang; label: string }) {
   return (
     <div role="group" aria-label={label} className="flex rounded-full border bg-card/60 p-1">
       {(["id", "en"] as const).map((l) => (
-        <button key={l} type="button" onClick={() => setLang(l)} aria-pressed={lang === l} className={`h-9 min-w-11 cursor-pointer rounded-full px-3 font-mono text-xs font-medium uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+        <button key={l} type="button" onClick={() => setLang(l)} aria-pressed={lang === l} className={`h-9 min-w-11 cursor-pointer rounded-full px-3 text-xs font-semibold uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
           {l}
         </button>
       ))}
@@ -102,7 +102,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
             <p className="m-0 text-[14px] leading-relaxed text-muted-foreground">{s.tagline}</p>
           </div>
           <nav aria-label={s.col} className="flex flex-col gap-2.5">
-            <span className="font-mono text-[11px] font-medium uppercase tracking-[.08em] text-subtle-foreground">{s.col}</span>
+            <span className="text-[11px] font-semibold uppercase tracking-[.08em] text-subtle-foreground">{s.col}</span>
             {links.map(([label, href]) => (
               <Link key={href} href={href} className="w-fit text-[14.5px] text-soft-foreground transition-colors hover:text-foreground">
                 {label}
@@ -150,7 +150,7 @@ export function SitePage({ lang, kicker, title, sub, children }: { lang: Lang; k
       <main>
         <section className={`pt-[clamp(48px,9vh,96px)] pb-[clamp(32px,6vh,64px)] ${GUTTER}`}>
           <div className={`${WRAP} animate-[layanMsgIn_.7s_cubic-bezier(.2,.7,.2,1)_both] motion-reduce:animate-none`}>
-            <span className="font-mono text-xs font-medium uppercase tracking-[.1em] text-primary">{kicker}</span>
+            <span className="text-xs font-semibold uppercase tracking-[.1em] text-primary">{kicker}</span>
             <h1 className="mt-4 max-w-[18ch] text-[length:clamp(38px,5.4vw,76px)] font-semibold leading-[1.02] tracking-[-.045em] text-balance">{title}</h1>
             <p className={`mt-5 max-w-[620px] ${SUB}`}>{sub}</p>
           </div>

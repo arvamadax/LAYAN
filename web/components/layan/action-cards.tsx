@@ -307,7 +307,7 @@ export function DraftCard({
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <span className="text-[15px] font-bold leading-5">{title}</span>
           <span className="text-[13px] leading-[18px] text-muted-foreground">{meta}</span>
-          <span className="font-mono text-xs text-muted-foreground">Draft · 1 halaman</span>
+          <span className="text-xs font-medium text-muted-foreground">Draft · 1 halaman</span>
           <StatusBadge status="pending_approval" className="mt-auto" />
         </div>
       </div>

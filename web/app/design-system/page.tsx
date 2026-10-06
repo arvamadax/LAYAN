@@ -40,7 +40,7 @@ function Section({ n, title, children }: { n: string; title: string; children: R
   return (
     <section className="flex flex-col gap-6">
       <div className="flex items-baseline gap-3">
-        <span className="font-mono text-xs text-subtle-foreground">{n}</span>
+        <span className="text-xs font-semibold text-subtle-foreground">{n}</span>
         <h2 className="text-[22px] font-bold tracking-[-0.01em]">{title}</h2>
       </div>
       {children}

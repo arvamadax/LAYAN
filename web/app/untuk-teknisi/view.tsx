@@ -88,7 +88,7 @@ export function TeknisiView() {
         <ol className="m-0 grid list-none gap-3 p-0 md:grid-cols-2">
           {t.steps.map(([title, desc], i) => (
             <li key={title} className="flex gap-4 rounded-[20px] border bg-card p-5">
-              <span aria-hidden className="font-mono text-xs font-medium text-primary">0{i + 1}</span>
+              <span aria-hidden className="text-xs font-semibold text-primary">0{i + 1}</span>
               <span className="flex flex-col gap-1.5">
                 <span className="text-[16px] font-semibold">{title}</span>
                 <span className="text-[14.5px] leading-relaxed text-muted-foreground">{desc}</span>

@@ -88,7 +88,7 @@ export function KeamananView() {
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {t.kb.map(([title, section, gist]) => (
             <div key={title} className="flex flex-col gap-2 rounded-[20px] border bg-card p-5">
-              <span className="font-mono text-[11px] uppercase tracking-[.08em] text-subtle-foreground">{section}</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[.08em] text-subtle-foreground">{section}</span>
               <span className="border-l-2 border-primary pl-3 text-[17px] font-semibold">{title}</span>
               <span className="text-[14px] text-muted-foreground">{gist}</span>
             </div>
@@ -101,7 +101,7 @@ export function KeamananView() {
         <ol className="m-0 grid list-none gap-3 p-0 md:grid-cols-2 lg:grid-cols-3">
           {t.rules.map(([title, desc], i) => (
             <li key={title} className="flex flex-col gap-2 rounded-[20px] border bg-card p-5">
-              <span className="font-mono text-xs text-primary">0{i + 1}</span>
+              <span className="text-xs font-semibold text-primary">0{i + 1}</span>
               <span className="text-[17px] font-semibold">{title}</span>
               <span className="text-[14.5px] leading-relaxed text-muted-foreground">{desc}</span>
             </li>

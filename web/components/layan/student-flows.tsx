@@ -141,7 +141,7 @@ export const StudentFlows = memo(function StudentFlows({ lang, motion, children 
       <div className="mx-auto w-full max-w-[1376px]">
         <div className="flex flex-wrap items-end justify-between gap-x-12 gap-y-4">
           <div className="max-w-[640px]">
-            <span data-reveal className="font-mono text-xs font-medium uppercase tracking-[.1em] text-primary">{t.kicker}</span>
+            <span data-reveal className="text-xs font-semibold uppercase tracking-[.1em] text-primary">{t.kicker}</span>
             <h2 id="flows-title" data-reveal="clip" className="mt-4 text-[length:clamp(30px,3.4vw,52px)] font-semibold leading-[1.05] tracking-[-.04em] text-balance">{t.title}</h2>
           </div>
           <p data-reveal data-delay="100" className="m-0 max-w-[460px] text-[length:clamp(15px,1.15vw,17px)] leading-[1.6] text-soft-foreground text-pretty">{t.sub}</p>

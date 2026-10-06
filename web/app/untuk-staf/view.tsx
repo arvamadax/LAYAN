@@ -77,7 +77,7 @@ export function StafView() {
     <SitePage lang={lang} kicker={t.kicker} title={t.title} sub={t.sub}>
       <Block title={t.cmpTitle}>
         <div className="overflow-hidden rounded-[24px] border bg-card">
-          <div className="hidden grid-cols-[.8fr_1fr_1fr] gap-6 border-b bg-panel px-6 py-3 font-mono text-[11px] uppercase tracking-[.08em] text-subtle-foreground md:grid">
+          <div className="hidden grid-cols-[.8fr_1fr_1fr] gap-6 border-b bg-panel px-6 py-3 text-[11px] font-semibold uppercase tracking-[.08em] text-subtle-foreground md:grid">
             {t.cmpHead.map((h) => <span key={h}>{h}</span>)}
           </div>
           {t.cmp.map(([svc, before, after]) => (
@@ -142,7 +142,7 @@ export function StafView() {
         <ol className="m-0 grid list-none gap-3 p-0 md:grid-cols-2">
           {t.steps.map(([title, desc], i) => (
             <li key={title} className="flex gap-4 rounded-[20px] border bg-card p-5">
-              <span aria-hidden className="font-mono text-xs font-medium text-primary">0{i + 1}</span>
+              <span aria-hidden className="text-xs font-semibold text-primary">0{i + 1}</span>
               <span className="flex flex-col gap-1.5">
                 <span className="text-[16px] font-semibold">{title}</span>
                 <span className="text-[14.5px] leading-relaxed text-muted-foreground">{desc}</span>

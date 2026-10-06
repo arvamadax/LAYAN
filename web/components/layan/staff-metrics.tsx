@@ -49,7 +49,7 @@ function Summary({ label, value, note }: { label: string; value: React.ReactNode
   return (
     <div className="flex flex-col gap-1 rounded-[12px] border bg-card px-4 py-3.5">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <span className="font-mono text-[26px] font-bold leading-[30px] tracking-[-0.02em]">{value}</span>
+      <span className="font-mono text-[26px] font-medium leading-[30px] tracking-[-0.02em]">{value}</span>
       <span className="text-xs text-muted-foreground">{note}</span>
     </div>
   )
@@ -69,7 +69,7 @@ function Bars({ items, barTitle, auto }: { items: { label: string; value: number
               <span className="h-2.5 overflow-hidden rounded-full bg-muted">
                 <span className="block h-full rounded-full" style={{ width: `${(it.value / max) * 100}%`, background: it.color }} />
               </span>
-              <span className="text-right font-mono text-[13px] font-bold">
+              <span className="text-right font-mono text-[13px] font-medium">
                 {it.value}
                 {a > 0 && <span className="font-sans font-medium text-muted-foreground"> · {a} otomatis</span>}
               </span>
@@ -115,12 +115,12 @@ function Proportion({ auto, handled, pct }: { auto: number; handled: number; pct
         <li className="flex items-center gap-2.5">
           <span aria-hidden className="size-2.5 rounded-full" style={{ background: "var(--primary)" }} />
           <span className="flex-1 font-medium">Selesai otomatis</span>
-          <span className="font-mono font-bold">{auto}</span>
+          <span className="font-mono font-medium">{auto}</span>
         </li>
         <li className="flex items-center gap-2.5">
           <span aria-hidden className="size-2.5 rounded-full bg-muted" />
           <span className="flex-1 font-medium">Diteruskan ke staf</span>
-          <span className="font-mono font-bold">{staff}</span>
+          <span className="font-mono font-medium">{staff}</span>
         </li>
       </ul>
       <table className="sr-only">
@@ -159,8 +159,8 @@ function Trend({ days }: { days: Day[] }) {
         <span>{shortDate(days[days.length - 1].date)}</span>
       </div>
       <p className="m-0 text-[13px] text-muted-foreground">
-        Total <span className="font-mono font-bold text-foreground">{total}</span>
-        {" · "}puncak <span className="font-mono font-bold text-foreground">{peak.total}</span> ({shortDate(peak.date)})
+        Total <span className="font-mono font-medium text-foreground">{total}</span>
+        {" · "}puncak <span className="font-mono font-medium text-foreground">{peak.total}</span> ({shortDate(peak.date)})
       </p>
       <table className="sr-only">
         <caption>Jumlah permintaan per hari dalam 30 hari terakhir</caption>

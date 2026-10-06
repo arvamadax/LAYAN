@@ -105,7 +105,7 @@
 
 @theme inline {
   --font-sans: var(--font-jakarta), system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-mono: var(--font-azeret), ui-monospace, monospace;
 
   --radius-sm: 6px;
   --radius-md: 10px;

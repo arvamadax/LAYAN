@@ -67,7 +67,7 @@ dan CSS variable baru. Butuh warna baru? Minta Arva menambah token.
 
 ### Tipografi, radius, bayangan
 
-- Font hanya `font-sans` (Plus Jakarta Sans) dan `font-mono` (JetBrains Mono, untuk kode seperti `LK-0587`, `G2.4`, `SD/2026/10/0142`).
+- Font hanya `font-sans` (Plus Jakarta Sans) dan `font-mono` (Azeret Mono 400/500/600/700, untuk kode seperti `LK-0587`, `G2.4`, `SD/2026/10/0142`). Aturan: mono hanya untuk string yang dicetak sistem (ID, kode, jam, angka); kata manusia selalu sans.
   Jangan menambah font.
 - Radius: `rounded-sm` 6px, `rounded-md` 10px, `rounded-lg` 14px, `rounded-xl` 20px, `rounded-full` untuk pill.
   Landing memakai konstanta yang sudah ada (`CARD`, `BTN_DARK`, `BTN_LINE`, `BTN_ACC`). Pakai ulang, jangan membuat varian baru.
