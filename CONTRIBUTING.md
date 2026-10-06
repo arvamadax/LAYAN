@@ -7,7 +7,7 @@
 | `api/`, `android/`, `deploy/`, `docs/`, `PLAN.md`, `DEMO.md` | Arva (backend + Android) |
 | `web/app/app/**`, `web/app/surat/**`, `components/layan/{chat,action-cards,history,letter,letter-view}.tsx`, `web/app/design-system` | Arva: PWA mahasiswa |
 | `web/app/staf/**`, `web/app/teknisi/**`, `components/layan/{staff-console,board}.tsx` | Arqia: Staff Console + Board Teknisi (issue label `arqia`) |
-| `web/app/page.tsx` (landing), halaman publik (`faq`, `unduh`, `status`, `keamanan`, `untuk-staf`, `untuk-teknisi`), `components/layan/{landing,student-flows,site}.tsx` | Boas: landing + halaman publik (issue label `boas`) |
+| `web/app/page.tsx` (landing), halaman publik (`faq`, `unduh`, `keamanan`, `untuk-staf`, `untuk-teknisi`), `components/layan/{landing,student-flows,site}.tsx` | Boas: landing + halaman publik (issue label `boas`) |
 | `primitives.tsx`, `app-bar.tsx`, `globals.css`, `lib/api.ts`, `app/layout.tsx`, `proxy.ts` | bersama: PR kecil, di-review orang lain |
 
 PWA dan App Android itu dua produk terpisah (tabel lengkapnya di `PLAN.md`). Keduanya hanya bertemu di API: `docs/API.md`.

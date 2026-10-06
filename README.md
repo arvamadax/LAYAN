@@ -53,14 +53,17 @@ Jenis surat yang tersedia ada lima: Surat Dispensasi, Surat Keterangan Aktif Kul
 Surat Izin Penelitian/Survei, dan Surat Rekomendasi Beasiswa. Syarat tiap jenis ada di [docs/API.md](docs/API.md).
 Laporan kerusakan dikelompokkan ke enam kategori: Listrik, AC, Proyektor, Jaringan, Kebersihan, dan Lainnya.
 
-Agent tidak bisa menyetujui apa pun. Keputusan akhir selalu ada di staf.
+Agent tidak bisa menyetujui apa pun. Agent hanya boleh menolak langsung permintaan yang jelas melanggar ketentuan
+layanan (mengajukan atas nama orang lain, isi surat yang tidak benar, tujuan yang dilarang aturan kampus, atau isi kasar).
+Penolakan itu tercatat, alasannya tampil di chat, dan staf bisa membatalkannya dari tab Ditolak otomatis. Kalau ragu,
+agent tidak menolak, jadi keputusan akhir tetap di staf.
 
 ## Untuk siapa
 
 | Peran | Apa yang didapat | Halaman |
 |---|---|---|
 | Mahasiswa | Chat dengan agent untuk minta surat, bertanya soal akademik, memesan ruang, dan melapor kerusakan | `/app` |
-| Staf | Antrean permintaan dengan ringkasan agent, hasil cek syarat, lampiran, dan preview surat. Ada tombol setujui, tolak (alasan wajib), dan balas. Halaman metrik menghitung berapa permintaan selesai tanpa staf dan perkiraan waktu yang dihemat | `/staf`, `/staf/metrik` |
+| Staf | Antrean permintaan dengan ringkasan agent, hasil cek syarat, lampiran, dan preview surat. Ada tombol setujui, tolak (alasan wajib), dan balas. Tab Ditolak otomatis untuk memeriksa penolakan agent. Halaman metrik menghitung berapa permintaan selesai tanpa staf dan perkiraan waktu yang dihemat | `/staf`, `/staf/tinjau`, `/staf/metrik` |
 | Teknisi | Board empat kolom (Baru, Dikerjakan, Eskalasi, Selesai) dan rekap kerusakan bulanan yang bisa disimpan sebagai PDF atau diunduh sebagai CSV | `/teknisi`, `/teknisi/rekap` |
 
 Setiap aksi agent dan manusia tercatat di audit log. Angka di halaman metrik dihitung dari log itu.
@@ -70,11 +73,12 @@ Panduan memakai untuk staf ada di `/untuk-staf` dan untuk teknisi di `/untuk-tek
 
 | Platform | Cara |
 |---|---|
-| Android | Unduh APK di `/api/app/layan.apk` (khusus mahasiswa), atau pasang PWA lewat Chrome |
+| Windows | Pasang PWA lewat Chrome atau Edge dari ikon instal di kolom alamat (macOS dan Linux sama) |
 | iPhone dan iPad | Buka di Safari, ketuk Bagikan, lalu Tambah ke Layar Utama |
-| Windows, macOS, Linux | Pasang PWA lewat Chrome atau Edge dari ikon instal di kolom alamat |
+| Android | Unduh APK di `/api/app/layan.apk` (khusus mahasiswa), atau pasang PWA lewat Chrome |
 
-Petunjuk lengkap ada di [`/unduh`](https://layan.codewithus.me/unduh).
+Tutorial langkah demi langkah untuk Windows, iPhone, dan Android ada di [`/unduh`](https://layan.codewithus.me/unduh).
+Status sistem (uptime API, versi web dan Android) ada di `/uptime`, khusus akun admin.
 
 Yang belum ada: app iOS, rilis di App Store atau Play Store, installer desktop (.exe, .dmg, .deb), notifikasi
 push, SSO, dan sinkronisasi offline.

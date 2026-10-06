@@ -43,6 +43,8 @@ staf hanya memutuskan, dan dampaknya terukur dari audit log.
 **6. Syarat tidak lolos (Bima)**
 - Bima minta surat dispensasi → agent menahannya karena UKT belum lunas, dengan alasan dan langkah berikutnya.
 - Poin: *kasus yang pasti ditolak tidak pernah sampai ke meja staf.*
+- Raka menulis "minta surat aktif kuliah atas nama teman" → agent **menolak otomatis** karena melanggar ketentuan
+  (card "Cek ketentuan layanan"). Di Staff Console tab **Ditolak otomatis**, staf bisa mengonfirmasi atau membatalkannya.
 
 **7. Dampak (Staff Console, baris metrik)**
 - Tunjukkan "Selesai otomatis" (persen tanpa staf) dan "Waktu staf dihemat". Keduanya dihitung dari audit log, bukan angka karangan.

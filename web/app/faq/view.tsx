@@ -20,6 +20,7 @@ const T = {
       ["Jawaban dan keputusan", [
         ["Bagaimana kalau AI salah menjawab?", "Jawaban aturan akademik selalu menyertakan bagian pedoman yang dikutip, jadi kamu bisa memeriksanya. Kalau jawabannya tidak ditemukan, LAYAN membuatkan tiket ke unit terkait, bukan menebak."],
         ["Apakah AI yang menyetujui surat?", "Tidak. Agent hanya mengecek syarat (status aktif, UKT, lampiran) dan menyusun draf. Persetujuan atau penolakan dilakukan staf. Nomor surat terbit otomatis setelah disetujui."],
+        ["Bisakah AI menolak permintaanku?", "Bisa, hanya kalau permintaannya jelas melanggar ketentuan layanan: mengajukan atas nama orang lain, meminta isi surat yang tidak benar (misalnya kegiatan fiktif atau tanggal dimundurkan), tujuan yang dilarang aturan kampus, atau isi kasar. Alasannya ditampilkan di chat, penolakan tercatat, dan staf bisa membatalkannya kalau keliru. Kalau ragu, agent tidak menolak dan staf yang memutuskan."],
         ["Berapa lama surat diproses?", "Tergantung antrean staf. Statusnya bisa dipantau di chat dan di halaman Riwayat, dari diajukan sampai selesai."],
         ["Apakah pedoman akademiknya resmi?", "Belum. Isi basis pengetahuan saat ini adalah contoh untuk demo. Daftar topiknya ada di halaman Keamanan & sumber."],
       ]],
@@ -48,6 +49,7 @@ const T = {
       ["Answers and decisions", [
         ["What if the AI gets it wrong?", "Academic answers always include the quoted handbook section, so you can check it. If no answer is found, LAYAN opens a ticket to the right office instead of guessing."],
         ["Does the AI approve letters?", "No. The agent only checks requirements (active status, tuition, attachments) and drafts the letter. Staff approve or reject it. The letter number is issued automatically after approval."],
+        ["Can the AI reject my request?", "Yes, but only when a request clearly breaks the service terms: requesting on behalf of someone else, asking for untrue letter content (such as a made-up event or a backdated date), a purpose banned by campus rules, or abusive content. The reason is shown in the chat, the rejection is logged, and staff can reverse it if it is wrong. When in doubt, the agent does not reject and staff decide."],
         ["How long does a letter take?", "It depends on the staff queue. You can track the status in the chat and on the History page, from submitted to done."],
         ["Is the academic handbook official?", "Not yet. The knowledge base currently holds sample content for the demo. The topic list is on the Trust & sources page."],
       ]],

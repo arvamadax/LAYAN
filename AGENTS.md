@@ -24,7 +24,8 @@ staf memutuskan (`/staf`), teknisi mengerjakan laporan kerusakan (`/teknisi`). R
    - Tidak ada app iOS, App Store, Play Store, installer Windows (.exe/.msi), macOS (.dmg), atau Linux (.deb/.AppImage).
    - Yang ada hanya PWA (dipasang dari browser, semua peran) dan App Android berupa APK di `/api/app/layan.apk` (khusus mahasiswa).
    - Tidak ada push notification, SSO, atau sinkronisasi offline.
-   - Agent AI tidak bisa approve. Keputusan akhir selalu di staf.
+   - Agent AI tidak bisa approve. Agent hanya boleh menolak otomatis permintaan yang jelas melanggar ketentuan layanan
+     (`POLICY` di `api/src/tools.rs`); penolakan itu bisa dibatalkan staf di `/staf/tinjau`. Keputusan akhir tetap di staf.
    - Jenis surat hanya 5 (tabel "Jenis surat" di `docs/API.md`). Kategori laporan hanya: Listrik, AC, Proyektor, Jaringan, Kebersihan, Lainnya.
    - Akun teknisi demo: Pak Joko (Listrik/AC) dan Mas Dimas (Jaringan/Proyektor).
 3. **Jangan menambah dependency** (library chart, animasi, ikon, UI kit, state management) tanpa persetujuan Arva di PR.
