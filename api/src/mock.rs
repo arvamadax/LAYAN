@@ -26,6 +26,21 @@ fn letter_type(said: &str) -> &'static str {
     }
 }
 
+/// Pelanggaran ketentuan yang dinyatakan sendiri oleh mahasiswa: (ketentuan, layanan, alasan).
+/// Yang samar tidak ditolak di sini; staf yang memutuskan.
+fn policy_hit(said: &str) -> Option<(&'static str, &'static str, &'static str)> {
+    let service = if has(said, &["booking", "pinjam ruang", "pesan ruang", "sewa ruang"]) { "ruang" } else { "surat" };
+    if has(said, &["atas nama teman", "atas nama orang lain", "pakai nim teman", "nim temanku", "pakai akun teman", "buat temanku tapi"]) {
+        Some(("identitas", service, "Kamu meminta layanan untuk orang lain atau memakai data orang lain."))
+    } else if has(said, &["tanggal mundur", "dimundurkan", "backdate", "kegiatan fiktif", "lomba fiktif", "surat palsu", "palsukan", "naikkan ipk", "ubah ipk", "ganti nilai", "tanda tangan palsu"]) {
+        Some(("data_palsu", service, "Kamu meminta isi yang tidak sesuai kenyataan."))
+    } else if service == "ruang" && has(said, &["judi", "miras", "minuman keras", "kampanye politik", "kampanye caleg", "taruhan"]) {
+        Some(("tujuan_terlarang", service, "Ruang diminta untuk kegiatan yang dilarang aturan kampus."))
+    } else {
+        None
+    }
+}
+
 const LETTER_WORDS: [&str; 13] =
     ["surat", "izin", "dispensasi", "lomba", "aktif kuliah", "magang", "kerja praktik", "pengantar", "penelitian", "survei", "riset", "rekomendasi", "beasiswa"];
 
@@ -173,6 +188,12 @@ pub fn next(tr: &[Value]) -> Value {
                 .unwrap_or("Pertanyaan akademik");
             call("createTicket", json!({ "category": "Beban studi / SKS", "unit": "Bagian Akademik Fakultas", "question": question }))
         }
+        None if policy_hit(&said).is_some() => {
+            let (rule, service, reason) = policy_hit(&said).unwrap_or_default();
+            let request: String = tr[u]["content"].as_str().unwrap_or("").chars().take(120).collect();
+            let letter = letter_type(&format!(" {said} "));
+            call("rejectByPolicy", json!({ "rule": rule, "service": service, "letter_type": letter, "request": request, "reason": reason }))
+        }
         None if has(&said, &LETTER_WORDS) => call("getStudentProfile", json!({})),
         None if has(&said, &["sks", " ip ", "ipk", "cuti", "nilai", "aturan", "krs", "ukt", "masa studi", "konversi"]) => {
             call("searchKnowledgeBase", json!({ "query": said }))
@@ -303,5 +324,8 @@ mod tests {
         assert_eq!(times("jam 9.00 sampai 11:30"), Some(("09:00".into(), "11:30".into())));
         assert_eq!(people("rapat 20 orang"), Some(20));
         assert_eq!(category("ac di ruang f2.3 mati"), "AC");
+        assert_eq!(policy_hit("minta surat aktif kuliah atas nama teman").map(|p| p.0), Some("identitas"));
+        assert_eq!(policy_hit("booking ruang g2.4 buat nobar sambil judi bola").map(|p| p.0), Some("tujuan_terlarang"));
+        assert_eq!(policy_hit("surat dispensasi lomba tanggal 14 oktober"), None);
     }
 }

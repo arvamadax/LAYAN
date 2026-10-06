@@ -36,12 +36,14 @@ Error selalu `{ "error": "pesan siap tampil ke pengguna" }` dengan status 4xx/5x
 | GET | `/api/staff/queue` | staf | antrean: `[{id, worker, tab, type, name, nim, prodi, time, mins, line, summary, checks, attachments, letter, timeline, ...}]` |
 | POST | `/api/staff/requests/{id}/decide` | staf | body `{approve, reason?, answer?}`; `reason` wajib saat menolak, `answer` wajib saat menjawab tiket |
 | POST | `/api/staff/requests/{id}/undo` | staf | batalkan keputusan |
+| GET | `/api/staff/auto-rejected` | staf | permintaan yang ditolak otomatis agent karena melanggar ketentuan, 14 hari terakhir, terbaru dulu: `[{id, worker, type, name, nim, prodi, time, rule, rule_label, reason, summary, reviewed_by, timeline}]`; `reviewed_by` terisi kalau staf sudah mengonfirmasi penolakannya |
+| POST | `/api/staff/requests/{id}/review` | staf | body `{reopen}` → `{title, sub}`. `reopen: false` = penolakan benar (dicatat). `reopen: true` = penolakan dibatalkan: surat dan booking kembali `needs_info` (mahasiswa lanjut lewat chat), tiket kembali `submitted` (masuk antrean); mahasiswa dikabari lewat chat. Hanya untuk permintaan `rejected` yang ditolak otomatis |
 | GET | `/api/staff/metrics` | staf | `{tokens, total, by, avg_minutes, auto, handled, auto_pct, saved_minutes}` |
 | GET | `/api/staff/metrics/daily?days=30` | staf | tren harian WIB, hari kosong tetap ada (0), urut lama ke baru: `[{date: "YYYY-MM-DD", total, auto, surat, tiket, booking, laporan}]`; `days` 1-90, default 30. Rumus `total`/`auto` sama dengan `/api/staff/metrics` |
 | GET | `/api/reports` | staf, teknisi | kartu laporan kerusakan, terbaru dulu: `[{id, room, title, category, urgency, status, assignee, tech, reporters, photo, note, time, updated, created_at, updated_at}]`; `created_at`/`updated_at` detik unix, `note` alasan eskalasi atau null |
 | POST | `/api/reports/{id}/status` | teknisi | body `{status, note?}` → `{ok, notified}`. Alur: `baru→dikerjakan` (Terima), `dikerjakan→selesai`, `dikerjakan→eskalasi`, `eskalasi→selesai`; lainnya 400. `note` wajib saat `eskalasi` (≥ 10 huruf). Pelapor dikabari lewat chat saat `selesai` dan `eskalasi`; permintaannya berstatus `processing` selama eskalasi |
 | GET | `/api/admin/overview` | admin | pemantauan: `{activity: [{at, ip, action, detail, name, email, role}], users: [{name, email, role, ai_calls, tokens, chats, requests, ips, last}], requests}` |
-| GET | `/api/public/stats` | publik | hitungan tanpa data pribadi untuk halaman `/status`: `{requests, requests_week, answers, fixed_week, auto_pct_week}` |
+| GET | `/api/public/stats` | publik | hitungan tanpa data pribadi untuk halaman `/uptime` (khusus admin): `{requests, requests_week, answers, fixed_week, auto_pct_week}` |
 | GET | `/api/app/latest` | publik | rilis App Android terbaru (404 kalau belum ada), lihat di bawah |
 | GET | `/api/app/layan.apk` | publik | file APK terbaru; dipakai tombol "Unduh Android" di landing |
 
@@ -50,7 +52,8 @@ Peran yang salah dijawab 403. Detail field lengkap: lihat `json!` di `api/src/re
 ## Status permintaan
 
 `submitted` → `processing` → `needs_info` / `pending_approval` → `approved` / `rejected` → `done`
-(`cancelled` = dibatalkan mahasiswa, terminal; `rejected` = ditolak staf)
+(`cancelled` = dibatalkan mahasiswa, terminal; `rejected` = ditolak staf, atau ditolak otomatis agent kalau
+`data.auto_rejected` = true, lihat "Ketentuan layanan")
 (label Indonesia ada di `web/lib/data.ts`, `STATUS_LABEL`).
 
 ## Stream SSE (`POST /api/chat`, `POST /api/chat/action`)
@@ -75,6 +78,9 @@ Ada 10 `kind`: `form`, `upload`, `checks`, `draft`, `answer`, `ticket` (`api/src
 Bentuk `data` tiap kind: lihat produsen di file tersebut dan renderer di `web/components/layan/action-cards.tsx`
 (PWA) atau `android/.../ui/Cards.kt` (Android).
 
+`checks`: `data = {checks: [{ok, label, note}], footer: {note}|null, policy?}`. `policy: true` berarti card ini hasil
+penolakan otomatis karena melanggar ketentuan layanan (judul "Cek ketentuan layanan"), bukan cek syarat surat.
+
 ### Card surat (`form`, `upload`)
 
 Isian surat ditentukan server, klien cukup merender ulang:
@@ -82,6 +88,22 @@ Isian surat ditentukan server, klien cukup merender ulang:
 - `form`: `data = {title, fields: [{key, label, placeholder, helper}]}`. Aksi `submit` mengirim `payload` berisi
   `{<key>: "nilai", ...}` untuk setiap field. Khusus `courses` (dispensasi), isinya dipisah koma.
 - `upload`: `data = {title}`, judul lampiran yang diminta (mis. "Bukti kegiatan", "Proposal penelitian").
+
+## Ketentuan layanan (penolakan otomatis)
+
+Agent boleh menolak langsung permintaan yang **jelas** melanggar ketentuan (tool `rejectByPolicy`, daftar di `POLICY`
+`api/src/tools.rs`). Kalau ragu, agent tidak menolak dan staf yang memutuskan. Penolakan tercatat di audit log,
+muncul di `/staf/tinjau`, dan bisa dibatalkan staf (`POST /api/staff/requests/{id}/review`).
+
+| `rule` | Ketentuan |
+|---|---|
+| `identitas` | Mengajukan atas nama orang lain atau memakai NIM, akun, atau data orang lain |
+| `data_palsu` | Meminta isi yang tidak benar: kegiatan fiktif, tanggal dimundurkan, IPK/nilai diubah, tanda tangan/stempel dipalsukan |
+| `tujuan_terlarang` | Tujuan yang melanggar hukum atau aturan kampus: judi, miras, kampanye politik praktis, berjualan tanpa izin |
+| `pelecehan` | Isi kasar, ancaman, pelecehan, atau SARA |
+
+Data permintaan: `{auto_rejected: true, policy_rule, reject_reason}`; setelah dibuka lagi: `{policy_override: true, reviewed_by}`.
+Metrik menghitung `rejectByPolicy` sebagai "selesai tanpa staf" (sama seperti syarat yang tidak terpenuhi).
 
 ## Jenis surat
 

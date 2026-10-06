@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowDownWideNarrow, ArrowLeft, Bot, Check, CircleAlert, ExternalLink, Inbox, Maximize2, MousePointerClick, Reply, Search, X } from "lucide-react"
+import { ArrowDownWideNarrow, ArrowLeft, Bot, Check, CircleAlert, ExternalLink, Inbox, Maximize2, MousePointerClick, Reply, RotateCcw, Search, ShieldAlert, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -49,6 +49,7 @@ export function StaffTabs() {
   const pathname = usePathname()
   const tabs = [
     { label: "Antrean", href: "/staf" },
+    { label: "Ditolak otomatis", href: "/staf/tinjau" },
     { label: "Metrik", href: "/staf/metrik" },
   ] as const
   return (
@@ -523,6 +524,165 @@ export function StaffConsole() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+/* ---------- Ditolak otomatis: penolakan agent karena melanggar ketentuan layanan ---------- */
+
+type AutoRejected = {
+  id: string
+  worker: Worker
+  type: string
+  name: string
+  nim: string | null
+  prodi: string | null
+  time: string
+  rule: string
+  rule_label: string
+  reason: string
+  summary: string
+  reviewed_by: string | null
+  timeline: { time: string; actor: string; tool: string; result: string }[]
+}
+
+/** Staf memeriksa penolakan otomatis: tetap ditolak (dicatat) atau dibatalkan (mahasiswa dikabari lewat chat). */
+export function AutoRejectedReview() {
+  const [items, setItems] = useState<AutoRejected[] | null>(null)
+  const [loadError, setLoadError] = useState("")
+  const [busy, setBusy] = useState<string | null>(null)
+
+  const load = useCallback(
+    () =>
+      api<AutoRejected[]>("/staff/auto-rejected").then(
+        (xs) => {
+          setItems(xs)
+          setLoadError("")
+        },
+        (e: Error) => setLoadError(e.message),
+      ),
+    [],
+  )
+
+  useEffect(() => {
+    load()
+    const t = setInterval(() => document.visibilityState === "visible" && load(), 10000)
+    return () => clearInterval(t)
+  }, [load])
+
+  async function review(id: string, reopen: boolean) {
+    setBusy(id)
+    try {
+      const res = await post<{ title: string; sub: string }>(`/staff/requests/${id}/review`, { reopen })
+      toast.success(res.title, { description: res.sub })
+      load()
+    } catch (e) {
+      toast.error((e as Error).message)
+      load()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const open = (items ?? []).filter((x) => !x.reviewed_by).length
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col">
+      <TopBar section="Staff Console" themeToggle />
+      <StaffTabs />
+      <main className="mx-auto flex w-full max-w-[880px] flex-col gap-4 px-4 py-6 sm:px-6">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-xl font-bold tracking-[-0.01em]">Ditolak otomatis</h1>
+          <p className="max-w-[640px] text-pretty text-sm leading-[21px] text-muted-foreground">
+            Agent menolak permintaan yang jelas melanggar ketentuan layanan, misalnya mengajukan atas nama orang lain atau meminta isi surat yang tidak benar.
+            Periksa alasannya. Kalau keliru, batalkan penolakan dan mahasiswa dikabari lewat chat. 14 hari terakhir{items ? ` · ${open} belum ditinjau` : ""}.
+          </p>
+        </div>
+
+        {loadError && (
+          <div role="alert" className="flex items-start gap-2 rounded-md bg-destructive-soft/60 px-4 py-2.5 text-[13px] text-destructive">
+            <CircleAlert className="mt-px size-4 flex-none" />
+            {loadError}
+          </div>
+        )}
+        {items === null && !loadError && <QueueSkeleton />}
+        {items !== null && items.length === 0 && (
+          <div className="flex flex-col items-center gap-3 rounded-lg border bg-card px-8 py-16 text-center">
+            <span className="grid size-12 place-items-center rounded-lg bg-accent text-primary">
+              <Inbox className="size-6" />
+            </span>
+            <span className="text-base font-bold">Belum ada penolakan otomatis</span>
+            <span className="max-w-[300px] text-pretty text-[13px] leading-[19px] text-muted-foreground">Permintaan yang ditolak agent karena melanggar ketentuan akan muncul di sini.</span>
+          </div>
+        )}
+
+        {items?.map((x) => (
+          <article key={x.id} className="flex flex-col gap-4 rounded-lg border bg-card p-4 sm:p-5">
+            <div className="flex flex-wrap items-start gap-3">
+              <WorkerTile worker={x.worker} size={40} />
+              <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-bold">{x.type}</h2>
+                  <StatusBadge status="rejected" />
+                </div>
+                <span className="text-[13px] text-muted-foreground">
+                  {x.name} · <span className="font-mono text-xs">{x.nim}</span>{x.prodi ? ` · ${x.prodi}` : ""} · {x.time} · <span className="font-mono text-xs">{x.id}</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold text-muted-foreground">Permintaan mahasiswa</span>
+              <p className="text-pretty text-[15px] leading-6">{x.summary || "-"}</p>
+            </div>
+
+            <div className="flex items-start gap-2.5 rounded-md border border-destructive-border bg-destructive-soft/40 px-3 py-2.5">
+              <ShieldAlert className="mt-px size-4 flex-none text-destructive" />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[13px] font-semibold">{x.rule_label}</span>
+                <span className="text-xs text-destructive">{x.reason}</span>
+              </div>
+            </div>
+
+            <details className="group text-[13px]">
+              <summary className="flex min-h-11 cursor-pointer items-center gap-1.5 font-semibold text-muted-foreground hover:text-foreground">
+                <Bot className="size-4" />
+                Linimasa aksi agent ({x.timeline.length})
+              </summary>
+              <ol className="mt-1 flex flex-col gap-2 border-l pl-4">
+                {x.timeline.map((t, i) => (
+                  <li key={i} className="flex flex-col gap-0.5">
+                    <span className="flex items-baseline gap-2">
+                      <span className="font-mono text-xs text-muted-foreground">{t.time}</span>
+                      <span className="font-mono text-[13px] font-semibold">{t.tool}</span>
+                      {t.actor !== "agent" && <span className="text-[11px] font-semibold uppercase text-muted-foreground">{t.actor}</span>}
+                    </span>
+                    <span className="text-soft-foreground">{t.result}</span>
+                  </li>
+                ))}
+              </ol>
+            </details>
+
+            <div className="flex flex-wrap items-center justify-end gap-2 border-t pt-4">
+              {x.reviewed_by ? (
+                <span className="mr-auto flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                  <Check className="size-4 text-ok" />
+                  Penolakan dikonfirmasi {x.reviewed_by}
+                </span>
+              ) : (
+                <Button variant="outline" size="card" disabled={busy === x.id} onClick={() => review(x.id, false)}>
+                  <Check />
+                  Penolakan benar
+                </Button>
+              )}
+              <Button size="card" disabled={busy === x.id} onClick={() => review(x.id, true)}>
+                <RotateCcw />
+                Batalkan penolakan
+              </Button>
+            </div>
+          </article>
+        ))}
+      </main>
     </div>
   )
 }

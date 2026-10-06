@@ -9,7 +9,7 @@ use sqlx::SqlitePool;
 use crate::agent::insert_message;
 use crate::auth::{CurrentUser, Role};
 use crate::error::AppError;
-use crate::tools::{letter_fields, letter_of, merge_data};
+use crate::tools::{letter_fields, letter_of, merge_data, POLICY};
 use crate::util::{clock, day_label, day_of, hm, iso, now, parse_iso, today_start, when};
 use crate::AppState;
 
@@ -199,7 +199,7 @@ pub async fn detail(State(s): State<AppState>, me: CurrentUser, Path(id): Path<S
             "submitForApproval" => "pending_approval",
             "approveRequest" => "approved",
             "replyTicket" => "done",
-            "rejectRequest" | "cancelBooking" => "rejected",
+            "rejectRequest" | "cancelBooking" | "rejectByPolicy" => "rejected",
             "updateReport" if result.starts_with("Mulai") => "processing",
             "updateReport" if result.starts_with("Selesai") => "done",
             _ => continue,
@@ -412,6 +412,85 @@ pub async fn undo(State(s): State<AppState>, me: CurrentUser, Path(id): Path<Str
     Ok(Json(json!({ "ok": true })))
 }
 
+/// Permintaan yang ditolak otomatis oleh agent karena melanggar ketentuan layanan (14 hari terakhir),
+/// supaya staf bisa memeriksa penolakan itu. Yang sudah dibuka lagi tidak ikut karena statusnya bukan `rejected`.
+#[utoipa::path(get, path = "/api/staff/auto-rejected", responses((status = 200)))]
+pub async fn auto_rejected(State(s): State<AppState>, me: CurrentUser) -> Result<Json<Vec<Value>>, AppError> {
+    me.require(Role::Staf)?;
+    let rows = sqlx::query_as::<_, Req>(&format!(
+        "{SELECT} WHERE r.status = 'rejected' AND json_extract(r.data, '$.auto_rejected') = 1 AND r.updated_at >= ?1 ORDER BY r.updated_at DESC"
+    ))
+    .bind(now() - 14 * 86_400)
+    .fetch_all(&s.db)
+    .await?;
+    let mut out = Vec::with_capacity(rows.len());
+    for r in rows {
+        let d = r.data();
+        let rule = d["policy_rule"].as_str().unwrap_or("");
+        let tl: Vec<Value> = timeline(&s.db, &r.id)
+            .await?
+            .into_iter()
+            .map(|(at, actor, tool, result)| json!({ "time": clock(at), "actor": actor, "tool": tool, "result": result }))
+            .collect();
+        out.push(json!({
+            "id": r.id,
+            "worker": r.worker,
+            "type": r.display_title(&d),
+            "name": r.name,
+            "nim": r.nim,
+            "prodi": r.prodi,
+            "time": when(r.created_at),
+            "rule": rule,
+            "rule_label": POLICY.iter().find(|(k, _)| *k == rule).map_or("Ketentuan layanan", |p| p.1),
+            "reason": d["reject_reason"],
+            "summary": if r.summary.is_empty() { r.line(&d) } else { r.summary.clone() },
+            "reviewed_by": d["reviewed_by"],
+            "timeline": tl,
+        }));
+    }
+    Ok(Json(out))
+}
+
+#[derive(Deserialize, utoipa::ToSchema)]
+pub struct ReviewReq {
+    /// true = batalkan penolakan otomatis, false = penolakan benar (dicatat).
+    pub reopen: bool,
+}
+
+/// Tinjau penolakan otomatis. Dibuka lagi: surat dan booking kembali `needs_info` (mahasiswa lanjut lewat chat),
+/// tiket masuk antrean staf. Mahasiswa dikabari lewat chat.
+#[utoipa::path(post, path = "/api/staff/requests/{id}/review", request_body = ReviewReq, params(("id" = String, Path)), responses((status = 200)))]
+pub async fn review(State(s): State<AppState>, me: CurrentUser, Path(id): Path<String>, Json(b): Json<ReviewReq>) -> Result<Json<Value>, AppError> {
+    me.require(Role::Staf)?;
+    let r = load(&s.db, &id).await?;
+    let d = r.data();
+    if r.status != "rejected" || d["auto_rejected"] != true {
+        return Err(AppError::Bad("Permintaan ini bukan penolakan otomatis yang bisa ditinjau.".into()));
+    }
+    let staf = me.user.name.clone();
+    let first = r.first_name().to_owned();
+    if !b.reopen {
+        merge_data(&s.db, &r.id, json!({ "reviewed_by": staf, "reviewed_at": now() })).await?;
+        audit_staf(&s.db, &r, "reviewRejection", &format!("Penolakan otomatis dikonfirmasi {staf}")).await?;
+        return Ok(Json(json!({ "title": "Penolakan dikonfirmasi", "sub": format!("Permintaan {first} tetap ditolak.") })));
+    }
+    let back = if r.worker == "helpdesk" { "submitted" } else { "needs_info" };
+    sqlx::query(
+        "UPDATE requests SET status = ?2, updated_at = unixepoch(), \
+         data = json_remove(json_set(data, '$.policy_override', json('true'), '$.reviewed_by', ?3), '$.auto_rejected', '$.reject_reason', '$.decided_at') WHERE id = ?1",
+    )
+    .bind(&r.id)
+    .bind(back)
+    .bind(&staf)
+    .execute(&s.db)
+    .await?;
+    let next = if back == "submitted" { "Pertanyaanmu sekarang masuk antrean unit terkait." } else { "Kamu bisa melanjutkannya lewat chat." };
+    let text = format!("{} sudah ditinjau ulang oleh {staf}. Penolakan otomatis dibatalkan. {next}", r.display_title(&d));
+    insert_message(&s.db, &r.student_id, "agent", Some(&text), None, None).await?;
+    audit_staf(&s.db, &r, "reopenRequest", &format!("Penolakan otomatis dibatalkan {staf}")).await?;
+    Ok(Json(json!({ "title": "Penolakan dibatalkan", "sub": format!("{first} sudah diberi tahu lewat chat.") })))
+}
+
 /// Batalkan permintaan oleh mahasiswa pemiliknya. Hanya selama belum selesai
 /// (belum disetujui/ditolak/selesai/dibatalkan). Tahan ruang ikut dilepas,
 /// antrean staf ikut kosong karena queue hanya berisi status pending_approval.
@@ -461,7 +540,8 @@ pub async fn metrics(State(s): State<AppState>, me: CurrentUser) -> Result<Json<
     let laporan = count("SELECT COUNT(*) FROM requests WHERE created_at >= ?1 AND worker = 'fasilitas' AND json_extract(data, '$.report_id') IS NOT NULL").await?;
     let booking = count("SELECT COUNT(*) FROM requests WHERE created_at >= ?1 AND worker = 'fasilitas' AND json_extract(data, '$.report_id') IS NULL").await?;
     let jawaban = count("SELECT COUNT(*) FROM audit_log WHERE at >= ?1 AND tool = 'answerWithCitation'").await?;
-    let ditahan = count("SELECT COUNT(*) FROM audit_log WHERE at >= ?1 AND tool = 'checkLetterRequirements' AND result LIKE 'Belum terpenuhi%'").await?;
+    // ditahan agent: syarat belum terpenuhi atau ditolak otomatis karena melanggar ketentuan
+    let ditahan = count("SELECT COUNT(*) FROM audit_log WHERE at >= ?1 AND ((tool = 'checkLetterRequirements' AND result LIKE 'Belum terpenuhi%') OR tool = 'rejectByPolicy')").await?;
     let ke_staf = count("SELECT COUNT(*) FROM audit_log WHERE at >= ?1 AND tool IN ('submitForApproval', 'createTicket')").await?;
     let avg: Option<f64> = sqlx::query_scalar(
         "SELECT AVG(a.at - r.created_at) FROM audit_log a JOIN requests r ON r.id = a.request_id WHERE a.at >= ?1 AND a.tool = 'submitForApproval'",
@@ -524,7 +604,7 @@ pub async fn metrics_daily(State(s): State<AppState>, me: CurrentUser, Query(q):
     .fetch_all(&s.db)
     .await?;
     let audit: Vec<(i64, i64, i64)> = sqlx::query_as(
-        "SELECT (at + 25200) / 86400, SUM(tool = 'answerWithCitation'),          SUM(tool = 'checkLetterRequirements' AND result LIKE 'Belum terpenuhi%') FROM audit_log WHERE at >= ?1 GROUP BY 1",
+        "SELECT (at + 25200) / 86400, SUM(tool = 'answerWithCitation'),          SUM((tool = 'checkLetterRequirements' AND result LIKE 'Belum terpenuhi%') OR tool = 'rejectByPolicy') FROM audit_log WHERE at >= ?1 GROUP BY 1",
     )
     .bind(since)
     .fetch_all(&s.db)
@@ -546,7 +626,7 @@ pub async fn metrics_daily(State(s): State<AppState>, me: CurrentUser, Query(q):
     Ok(Json(out))
 }
 
-/// Angka publik untuk halaman /status: tanpa login, hanya hitungan (tanpa data pribadi).
+/// Angka publik untuk halaman /uptime: tanpa login, hanya hitungan (tanpa data pribadi).
 pub async fn public_stats(State(s): State<AppState>) -> Result<Json<Value>, AppError> {
     let week = now() - 7 * 86_400;
     let count = |sql: &'static str, since: i64| {
@@ -560,7 +640,7 @@ pub async fn public_stats(State(s): State<AppState>) -> Result<Json<Value>, AppE
     let fixed_week = count("SELECT COUNT(*) FROM reports WHERE status = 'selesai' AND updated_at >= ?1", week).await?;
     // rumus "selesai tanpa staf" sama dengan metrics(), tapi untuk 7 hari terakhir
     let auto = count(
-        "SELECT COUNT(*) FROM audit_log WHERE at >= ?1 AND (tool IN ('answerWithCitation', 'reportDamage') OR (tool = 'checkLetterRequirements' AND result LIKE 'Belum terpenuhi%'))",
+        "SELECT COUNT(*) FROM audit_log WHERE at >= ?1 AND (tool IN ('answerWithCitation', 'reportDamage', 'rejectByPolicy') OR (tool = 'checkLetterRequirements' AND result LIKE 'Belum terpenuhi%'))",
         week,
     )
     .await?;

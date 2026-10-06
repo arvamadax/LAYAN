@@ -10,8 +10,24 @@ use crate::util::tanggal;
 
 /// Prompt sistem, memuat tanggal hari ini supaya "Jumat" bisa diubah jadi tanggal.
 pub fn system_prompt() -> String {
-    format!("{SYSTEM_PROMPT}\n\nHari ini {} WIB.", crate::util::today_long())
+    let rules: Vec<String> = POLICY.iter().map(|(k, label)| format!("- {k}: {label}.")).collect();
+    format!("{SYSTEM_PROMPT}\n\nKetentuan layanan:\n{}\n{POLICY_PROMPT}\n\nHari ini {} WIB.", rules.join("\n"), crate::util::today_long())
 }
+
+/// Ketentuan layanan (T&C). Permintaan yang jelas melanggar salah satunya ditolak agent tanpa menunggu staf
+/// (rejectByPolicy); staf tetap bisa membatalkan penolakan itu dari Staff Console.
+pub const POLICY: [(&str, &str); 4] = [
+    ("identitas", "Mengajukan atas nama orang lain atau memakai NIM, akun, atau data orang lain"),
+    ("data_palsu", "Meminta isi yang tidak benar: kegiatan fiktif, tanggal dimundurkan, IPK atau nilai diubah, tanda tangan atau stempel dipalsukan"),
+    ("tujuan_terlarang", "Tujuan yang melanggar hukum atau aturan kampus: judi, miras, kampanye politik praktis, berjualan tanpa izin"),
+    ("pelecehan", "Isi kasar, ancaman, pelecehan, atau SARA"),
+];
+
+const POLICY_PROMPT: &str = "\
+- Kalau permintaan layanan JELAS melanggar salah satu ketentuan di atas (mahasiswa sendiri yang menyatakannya),
+  panggil rejectByPolicy dan jangan lanjutkan alurnya. Penolakan ini tercatat dan bisa ditinjau staf.
+- Kalau hanya ragu atau curiga, JANGAN menolak: lanjutkan alur biasa, staf yang memutuskan.
+- Permintaan di luar 4 layanan bukan pelanggaran ketentuan: cukup tolak dengan satu kalimat seperti biasa.";
 
 const SYSTEM_PROMPT: &str = "\
 Kamu LAYAN, digital campus worker yang mengurus layanan kampus untuk mahasiswa sampai selesai.
@@ -149,6 +165,19 @@ pub fn definitions() -> Value {
             &[],
         ),
         def(
+            "rejectByPolicy",
+            "Tolak permintaan layanan yang jelas melanggar ketentuan layanan. Tercatat di Staff Console dan bisa dibatalkan staf.",
+            json!({
+                "rule": { "type": "string", "enum": POLICY.map(|p| p.0), "description": "Ketentuan yang dilanggar" },
+                "service": { "type": "string", "enum": ["surat", "ruang", "tiket"], "description": "Layanan yang diminta" },
+                "letter_type": { "type": "string", "enum": LETTERS.iter().map(|l| l.key).collect::<Vec<_>>(), "description": "Khusus surat: jenis surat yang diminta" },
+                "request": text("Ringkasan permintaan mahasiswa dalam 1 kalimat, untuk staf"),
+                "reason": text("1 kalimat: bagian permintaan yang melanggar"),
+                "message": text("Kalimat untuk mahasiswa"),
+            }),
+            &["rule", "service", "request", "reason"],
+        ),
+        def(
             "reportDamage",
             "Catat laporan kerusakan fasilitas dan teruskan ke teknisi. Laporan dobel digabung otomatis.",
             json!({
@@ -171,6 +200,9 @@ const GROUPS: [&[&str]; 4] = [
     &["reportDamage"],
 ];
 
+/// Tool yang selalu ikut terkirim, juga di tengah alur: pelanggaran bisa baru terlihat dari isian form.
+const ALWAYS: [&str; 1] = ["rejectByPolicy"];
+
 /// Tool yang dikirim ke LLM. Setelah pesan mahasiswa, semua tool (LLM perlu memilih layanan).
 /// Saat melanjutkan alur (pesan terakhir hasil tool), cukup tool layanan itu: definisi tool
 /// adalah bagian terbesar prompt dan ikut terkirim di setiap panggilan.
@@ -183,11 +215,11 @@ pub fn definitions_for(transcript: &[Value]) -> Value {
     let Some(group) = name.and_then(|n| GROUPS.iter().find(|g| g.contains(&n))) else {
         return all;
     };
-    all.as_array().unwrap().iter().filter(|d| d["function"]["name"].as_str().is_some_and(|n| group.contains(&n))).cloned().collect()
+    all.as_array().unwrap().iter().filter(|d| d["function"]["name"].as_str().is_some_and(|n| group.contains(&n) || ALWAYS.contains(&n))).cloned().collect()
 }
 
 /// Tool terakhir sebuah alur. Semuanya sudah menampilkan card atau pesan sendiri.
-pub const FINAL: [&str; 5] = ["submitForApproval", "createTicket", "holdRoom", "reportDamage", "answerWithCitation"];
+pub const FINAL: [&str; 6] = ["submitForApproval", "createTicket", "holdRoom", "reportDamage", "answerWithCitation", "rejectByPolicy"];
 
 pub const DRAFT_STEPS: [&str; 3] = ["Cek syarat", "Menyusun draft PDF", "Kirim ke staf untuk persetujuan"];
 
@@ -206,6 +238,7 @@ pub fn status_for(tool: &str) -> (&'static str, Option<usize>) {
         "findRooms" => ("Mengecek jadwal ruangan", None),
         "holdRoom" => ("Menahan ruang", None),
         "reportDamage" => ("Mencatat laporan kerusakan", None),
+        "rejectByPolicy" => ("Mengecek ketentuan layanan", None),
         _ => ("Mengerjakan", None),
     }
 }
@@ -623,6 +656,51 @@ pub async fn exec(cx: &mut Cx<'_>, name: &str, args: &Value) -> anyhow::Result<O
             Ok(Outcome::Done(json!({ "tiket": id })))
         }
 
+        "rejectByPolicy" => {
+            let rule = arg(args, "rule");
+            let Some((_, label)) = POLICY.iter().find(|(k, _)| *k == rule) else {
+                bail!("Ketentuan tidak dikenal: '{rule}'. Pilih salah satu: {}.", POLICY.map(|p| p.0).join(", "));
+            };
+            let reason = arg(args, "reason");
+            if reason.chars().count() < 10 {
+                bail!("Tulis alasan yang jelas: bagian permintaan yang melanggar.");
+            }
+            let summary = arg(args, "request");
+            // permintaan yang sedang berjalan ikut ditolak; kalau belum ada, dibuat supaya tercatat untuk staf
+            let req = match cx.th.request_id.clone() {
+                Some(id) => {
+                    if get_data(&db, &id).await?["policy_override"] == true {
+                        bail!("Staf sudah meninjau permintaan ini dan membatalkan penolakan otomatis. Lanjutkan alurnya, jangan ditolak lagi.");
+                    }
+                    id
+                }
+                None => {
+                    // jenis surat ikut disimpan supaya kalau staf membuka lagi, form yang muncul sesuai
+                    let letter = LETTERS.iter().find(|l| l.key == arg(args, "letter_type")).unwrap_or(&LETTERS[1]);
+                    let (prefix, worker, title, data) = match arg(args, "service") {
+                        "tiket" => ("TKT", "helpdesk", "Tiket helpdesk", json!({ "category": "Ditolak otomatis", "unit": "Bagian Akademik Fakultas", "question": summary })),
+                        "ruang" => ("REQ", "fasilitas", "Booking ruang", json!({})),
+                        _ => ("REQ", "surat", letter.title, json!({ "type": letter.key })),
+                    };
+                    create_request(cx, prefix, worker, title, "rejected", data).await?
+                }
+            };
+            let why = format!("Ditolak otomatis: {reason}");
+            merge_data(&db, &req, json!({ "auto_rejected": true, "policy_rule": rule, "reject_reason": why, "decided_at": crate::util::now() })).await?;
+            sqlx::query("UPDATE requests SET status = 'rejected', summary = CASE WHEN summary = '' THEN ?2 ELSE summary END, updated_at = unixepoch() WHERE id = ?1")
+                .bind(&req).bind(summary)
+                .execute(&db)
+                .await?;
+            sqlx::query("UPDATE bookings SET status = 'released' WHERE request_id = ?1 AND status = 'held'").bind(&req).execute(&db).await?;
+            cx.audit("rejectByPolicy", &format!("Melanggar ketentuan: {label}")).await?;
+            let checks = json!([{ "ok": false, "label": label, "note": reason }]);
+            let footer = json!({ "note": "Penolakan ini tercatat dan bisa ditinjau ulang staf. Kalau menurutmu keliru, sampaikan ke Layanan Akademik." });
+            let msg = or(arg(args, "message"), "Maaf, permintaan ini aku tolak karena melanggar ketentuan layanan LAYAN.");
+            cx.say(Some(msg), Some(card("checks", json!({ "checks": checks, "footer": footer, "policy": true })))).await?;
+            cx.th.request_id = None;
+            Ok(Outcome::Done(json!({ "status": "ditolak otomatis", "permintaan": req })))
+        }
+
         "findRooms" => fasilitas::find_rooms(cx, args).await,
         "holdRoom" => fasilitas::hold_room(cx, args).await,
         "reportDamage" => fasilitas::report_damage(cx, args).await,
@@ -797,14 +875,20 @@ mod tests {
     #[test]
     fn tool_per_layanan() {
         let all = names(definitions());
-        assert!(GROUPS.iter().map(|g| g.len()).sum::<usize>() == all.len() && all.iter().all(|n| GROUPS.iter().any(|g| g.contains(&n.as_str()))));
+        let in_group = |n: &str| GROUPS.iter().any(|g| g.contains(&n)) || ALWAYS.contains(&n);
+        assert!(GROUPS.iter().map(|g| g.len()).sum::<usize>() + ALWAYS.len() == all.len() && all.iter().all(|n| in_group(n)));
 
         let mut tr = vec![llm::user("mau surat dispensasi")];
         assert_eq!(names(definitions_for(&tr)).len(), all.len());
 
         tr.push(llm::assistant_call("c1".into(), "getStudentProfile", json!({})));
         tr.push(llm::tool_result("c1", &json!({ "nama": "Raka" })));
-        assert_eq!(names(definitions_for(&tr)), GROUPS[0]);
+        let mut want: Vec<&str> = GROUPS[0].to_vec();
+        want.push("rejectByPolicy");
+        let mut got = names(definitions_for(&tr));
+        got.sort();
+        want.sort();
+        assert_eq!(got, want);
 
         // Mahasiswa menulis lagi di tengah alur: semua tool kembali tersedia.
         tr.push(llm::user("eh AC di F2.3 mati"));

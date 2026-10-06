@@ -473,7 +473,7 @@ export function Chat({ initialText = "" }: { initialText?: string }) {
         return <UploadCard title={what} onUpload={(f) => upload(m.id, f)} />
       }
       case "checks":
-        return <ChecksCard checks={d.checks as Check[]} footer={(d.footer as { note: string } | null) ?? undefined} />
+        return <ChecksCard checks={d.checks as Check[]} footer={(d.footer as { note: string } | null) ?? undefined} policy={d.policy === true} />
       case "draft":
         return <DraftCard title={d.title as string} meta={d.meta as string} requestId={d.request_id as string} />
       case "answer":

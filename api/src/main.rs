@@ -40,13 +40,13 @@ pub struct AppState {
     paths(
         health, auth::login, auth::logout, auth::me,
         chat::list, chat::send, chat::reset, chat::action, chat::upload,
-        requests::mine, requests::detail, requests::cancel, requests::queue, requests::decide, requests::undo, requests::metrics, requests::metrics_daily,
+        requests::mine, requests::detail, requests::cancel, requests::queue, requests::decide, requests::undo, requests::auto_rejected, requests::review, requests::metrics, requests::metrics_daily,
         board::list, board::set_status,
         app_update::latest, app_update::apk, admin::overview,
     ),
     components(schemas(
         auth::Role, auth::User, auth::LoginReq, auth::LoginRes,
-        agent::ChatMessage, chat::SendReq, chat::ActionReq, requests::DecideReq, board::StatusReq,
+        agent::ChatMessage, chat::SendReq, chat::ActionReq, requests::DecideReq, requests::ReviewReq, board::StatusReq,
     ))
 )]
 struct ApiDoc;
@@ -105,6 +105,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/staff/queue", get(requests::queue))
         .route("/api/staff/requests/{id}/decide", post(requests::decide))
         .route("/api/staff/requests/{id}/undo", post(requests::undo))
+        .route("/api/staff/auto-rejected", get(requests::auto_rejected))
+        .route("/api/staff/requests/{id}/review", post(requests::review))
         .route("/api/staff/metrics", get(requests::metrics))
         .route("/api/staff/metrics/daily", get(requests::metrics_daily))
         .route("/api/public/stats", get(requests::public_stats))

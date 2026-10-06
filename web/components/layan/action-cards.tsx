@@ -230,15 +230,16 @@ export function UploadCard({ title = "Bukti kegiatan", onUpload }: { title?: str
 
 /* ---------- 3 · Cek syarat ---------- */
 
-export function ChecksCard({ checks, footer }: { checks: CheckT[]; footer?: { note: string } }) {
+// `policy` = penolakan otomatis karena melanggar ketentuan layanan (rejectByPolicy), bukan syarat surat
+export function ChecksCard({ checks, footer, policy }: { checks: CheckT[]; footer?: { note: string }; policy?: boolean }) {
   const failed = checks.filter((c) => !c.ok).length
   return (
     <CardShell
       worker="surat"
-      title="Hasil cek syarat"
+      title={policy ? "Cek ketentuan layanan" : "Hasil cek syarat"}
       right={
         <span className={cn("text-xs font-semibold", failed ? "text-destructive" : "text-ok")}>
-          {failed ? `${failed} belum terpenuhi` : `${checks.length} dari ${checks.length}`}
+          {policy ? "Ditolak otomatis" : failed ? `${failed} belum terpenuhi` : `${checks.length} dari ${checks.length}`}
         </span>
       }
     >
