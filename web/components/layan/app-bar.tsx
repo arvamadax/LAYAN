@@ -84,21 +84,22 @@ export function ThemeToggle() {
 export function TopBar({ section, themeToggle }: { section: string; themeToggle?: boolean }) {
   const { me } = useStore()
   return (
-    <header className="flex h-14 flex-none items-center gap-4 border-b bg-card px-6">
-      <div className="flex items-center gap-2.5">
+    <header className="flex h-14 flex-none items-center gap-2 border-b bg-card px-4 sm:gap-4 sm:px-6">
+      <div className="flex min-w-0 items-center gap-2.5">
         <Wordmark />
-        <span className="mx-1 h-5 w-px bg-border" />
-        <span className="text-sm font-semibold text-muted-foreground">{section}</span>
+        <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
+        {/* HP: nama bagian disembunyikan supaya header tidak melebar di 375px */}
+        <span className="hidden truncate text-sm font-semibold text-muted-foreground sm:inline">{section}</span>
       </div>
       <span className="flex-1" />
       {themeToggle && <ThemeToggle />}
       {me && (
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex cursor-pointer items-center gap-2.5 rounded-md border-l py-1 pl-3 pr-2 text-left outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-accent">
+          <DropdownMenuTrigger aria-label={`Akun ${me.name}`} className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-md border-l py-1 pl-3 pr-2 text-left outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-accent">
             <span className="grid size-8 place-items-center rounded-full text-xs font-bold" style={avatarColors(me)}>
               {initials(me.name)}
             </span>
-            <span className="flex flex-col">
+            <span className="hidden flex-col sm:flex">
               <span className="text-[13px] font-semibold leading-[17px]">{me.name}</span>
               <span className="text-xs leading-4 text-muted-foreground">{me.unit}</span>
             </span>

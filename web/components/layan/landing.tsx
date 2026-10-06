@@ -8,7 +8,7 @@ import { Logo, SiteFooter, setLang, useLang, type Lang } from "@/components/laya
 import { ThemeToggle } from "@/components/layan/app-bar"
 import Link from "next/link"
 import { StudentFlows } from "@/components/layan/student-flows"
-import { Download as DlIcon, Laptop, Smartphone, Terminal } from "lucide-react"
+import { ClipboardCheck, Download as DlIcon, Laptop, Smartphone, Wrench } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 
 // Landing page publik.
@@ -25,12 +25,13 @@ const ICONS: Record<string, string> = {
 
 const ID = {
   navAria: "Navigasi utama", langLabel: "Bahasa", motionLabel: "Animasi",
-  nav: { layanan: "Layanan", cara: "Cara Kerja", app: "App", faq: "FAQ", menu: "Menu" },
+  nav: { layanan: "Layanan", cara: "Cara Kerja", app: "Mulai", faq: "FAQ", menu: "Menu" },
   signin: "Masuk", open: "Buka LAYAN", student: "Mahasiswa",
   h1a: "Urus layanan kampus.",
   phrases: ["Lewat satu chat.", "Tanpa antre.", "Sampai selesai."],
   heroSub: "Ajukan surat akademik, tanya aturan akademik, booking ruang, atau lapor kerusakan. Keputusan akhir tetap di staf kampus.",
   cta1: "Mulai dengan LAYAN",
+  facts: ["4 layanan kampus", "Keputusan akhir di staf", "Pasang dari browser atau APK"],
   chatStatus: "Asisten layanan kampus · aktif",
   greet1: "Halo.", greet2: "Mau urus apa hari ini?",
 
@@ -69,18 +70,20 @@ const ID = {
   finalTitle: "Urusan kampus, beres dari chat.",
   finalSub: "Jelajahi tanpa akun. Masuk dengan akun kampus saat kamu siap mengajukan sesuatu.",
   guideStaf: "Panduan untuk Staf", guideTek: "Panduan untuk Teknisi",
+  guideStafSub: "Setujui surat, jawab tiket, dan konfirmasi booking di Staff Console.",
+  guideTekSub: "Terima laporan kerusakan, eskalasi, dan tandai selesai di Board.",
   appAndroid: "Unduh app Android",
   installHow: "Cara pasang di HP",
 
   dlBtn: "Unduh app",
   dlTitle: "Unduh LAYAN",
-  dlSub: "Pilih platform untuk cara pasang yang benar.",
-  dlMore: "Selengkapnya di halaman Unduh",
+  dlSub: "Pilih perangkatmu untuk melihat cara pasangnya.",
+  dlPick: "Pilih perangkat di atas.",
+  dlMore: "Lihat tutorial lengkap",
   dlPlats: {
-    apple: { name: "Apple", title: "Apple: iPhone, iPad, Mac", lines: ["Tidak ada app LAYAN di App Store.", "iPhone/iPad: buka di Safari, ketuk Bagikan, lalu Tambah ke Layar Utama.", "Mac: PWA lewat Chrome/Edge (ikon instal di kolom alamat), atau Safari lewat menu File lalu Add to Dock."] },
-    android: { name: "Android", title: "Android", lines: ["Khusus akun mahasiswa."], apk: "Unduh APK", alt: "Alternatif: PWA lewat Chrome — menu titik tiga, lalu Instal aplikasi." },
-    windows: { name: "Windows", title: "Windows", lines: ["Tidak ada installer .exe.", "PWA lewat Chrome/Edge: klik ikon instal di ujung kolom alamat."] },
-    linux: { name: "Linux", title: "Linux", lines: ["Tidak ada .deb/.AppImage.", "PWA lewat Chrome/Chromium/Edge: klik ikon instal di kolom alamat."] },
+    windows: { name: "Windows", title: "Windows: Chrome atau Edge", lines: ["Tidak ada installer .exe, LAYAN dipasang sebagai PWA.", "Klik ikon Instal di ujung kolom alamat, lalu Instal."] },
+    iphone: { name: "iPhone", title: "iPhone / iPad: Safari", lines: ["Tidak ada app LAYAN di App Store.", "Di Safari ketuk Bagikan, lalu Tambah ke Layar Utama."] },
+    android: { name: "Android", title: "Android", lines: ["App Android khusus akun mahasiswa."], apk: "Unduh APK", alt: "Staf dan teknisi: PWA lewat Chrome, menu titik tiga, lalu Instal aplikasi." },
   } as Record<Plat, { name: string; title: string; lines: string[]; apk?: string; alt?: string }>,
 
   mTitle: "Masuk untuk melanjutkan",
@@ -97,12 +100,13 @@ type Dict = typeof ID
 
 const EN: Dict = {
   navAria: "Main navigation", langLabel: "Language", motionLabel: "Animation",
-  nav: { layanan: "Services", cara: "How it works", app: "App", faq: "FAQ", menu: "Menu" },
+  nav: { layanan: "Services", cara: "How it works", app: "Get started", faq: "FAQ", menu: "Menu" },
   signin: "Sign in", open: "Open LAYAN", student: "Student",
   h1a: "Handle campus services.",
   phrases: ["In one chat.", "No queues.", "Start to finish."],
   heroSub: "Request academic letters, ask about academic rules, book a room, or report damage. Campus staff still make the final call.",
   cta1: "Start with LAYAN",
+  facts: ["4 campus services", "Staff make the final call", "Install from the browser or APK"],
   chatStatus: "Campus service assistant · online",
   greet1: "Hi there.", greet2: "What do you need today?",
 
@@ -141,18 +145,20 @@ const EN: Dict = {
   finalTitle: "Campus errands, handled in a chat.",
   finalSub: "Explore without an account. Sign in with your campus account when you are ready to submit something.",
   guideStaf: "Staff guide", guideTek: "Technician guide",
+  guideStafSub: "Approve letters, answer tickets, and confirm bookings in the Staff Console.",
+  guideTekSub: "Accept damage reports, escalate, and mark them done on the Board.",
   appAndroid: "Download Android app",
   installHow: "How to install",
 
   dlBtn: "Get the app",
   dlTitle: "Download LAYAN",
-  dlSub: "Pick your platform for the right install steps.",
-  dlMore: "More on the Get the app page",
+  dlSub: "Pick your device to see how to install it.",
+  dlPick: "Pick a device above.",
+  dlMore: "See the full guide",
   dlPlats: {
-    apple: { name: "Apple", title: "Apple: iPhone, iPad, Mac", lines: ["No LAYAN app on the App Store.", "iPhone/iPad: open in Safari, tap Share, then Add to Home Screen.", "Mac: PWA via Chrome/Edge (install icon in the address bar), or Safari via the File menu, then Add to Dock."] },
-    android: { name: "Android", title: "Android", lines: ["Student accounts only."], apk: "Download APK", alt: "Alternative: PWA via Chrome — three-dot menu, then Install app." },
-    windows: { name: "Windows", title: "Windows", lines: ["No .exe installer.", "PWA via Chrome/Edge: click the install icon at the end of the address bar."] },
-    linux: { name: "Linux", title: "Linux", lines: ["No .deb/.AppImage.", "PWA via Chrome/Chromium/Edge: click the install icon in the address bar."] },
+    windows: { name: "Windows", title: "Windows: Chrome or Edge", lines: ["No .exe installer, LAYAN installs as a PWA.", "Click the Install icon at the end of the address bar, then Install."] },
+    iphone: { name: "iPhone", title: "iPhone / iPad: Safari", lines: ["No LAYAN app on the App Store.", "In Safari tap Share, then Add to Home Screen."] },
+    android: { name: "Android", title: "Android", lines: ["The Android app is for student accounts only."], apk: "Download APK", alt: "Staff and technicians: PWA via Chrome, three-dot menu, then Install app." },
   } as Record<Plat, { name: string; title: string; lines: string[]; apk?: string; alt?: string }>,
 
   mTitle: "Sign in to continue",
@@ -171,8 +177,8 @@ const DICT: Record<Lang, Dict> = { id: ID, en: EN }
 type Intent = { key: string; path: string; q?: string }
 type Gate = (i: Intent) => () => void
 
-/** Platform panel Unduh: Apple, Android, Windows, Linux. */
-type Plat = "apple" | "android" | "windows" | "linux"
+/** Platform panel Unduh: Windows, iPhone, Android (sama dengan tutorial di /unduh). */
+type Plat = "windows" | "iphone" | "android"
 
 const SECTIONS = ["top", "layanan", "cara-kerja", "mulai"]
 const EASE = "cubic-bezier(.2,.7,.2,1)"
@@ -254,50 +260,43 @@ function GoButton({ onClick, children, className = "" }: { onClick: () => void; 
   )
 }
 
-/* ---------- panel Unduh di nav: Apple / Android / Windows / Linux ---------- */
+/* ---------- panel Unduh di nav: Windows / iPhone / Android ---------- */
 
 const PLATS: { k: Plat; Icon: typeof Smartphone }[] = [
-  { k: "apple", Icon: Smartphone },
-  { k: "android", Icon: DlIcon },
   { k: "windows", Icon: Laptop },
-  { k: "linux", Icon: Terminal },
+  { k: "iphone", Icon: Smartphone },
+  { k: "android", Icon: DlIcon },
 ]
 
-// platform pengunjung ditebak dari userAgent untuk disorot duluan;
-// tidak cocok = linux (instruksinya PWA generik, berlaku di Chromium mana pun)
-const detectPlat = (): Plat => {
-  const ua = navigator.userAgent.toLowerCase()
-  if (/iphone|ipad|macintosh|mac os/.test(ua)) return "apple"
-  if (/android/.test(ua)) return "android"
-  if (/windows/.test(ua)) return "windows"
-  return "linux"
-}
-
-/** Isi sesuai tabel fakta di issue: tanpa klaim App Store / Play Store / installer. */
-function DownloadDialog({ t, plat, setPlat, open, onOpenChange }: { t: Dict; plat: Plat; setPlat: (p: Plat) => void; open: boolean; onOpenChange: (v: boolean) => void }) {
-  const p = t.dlPlats[plat]
+/** Isi sesuai fakta produk: tanpa klaim App Store / Play Store / installer. Platform hanya dipilih pengguna, tidak ditebak. */
+function DownloadDialog({ t, plat, setPlat, open, onOpenChange }: { t: Dict; plat: Plat | null; setPlat: (p: Plat) => void; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const p = plat && t.dlPlats[plat]
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-[24px] motion-reduce:animate-none sm:max-w-[520px]">
         <DialogTitle className="text-[22px] font-semibold tracking-[-.02em]">{t.dlTitle}</DialogTitle>
         <DialogDescription className="text-[14.5px]">{t.dlSub}</DialogDescription>
-        <div role="group" aria-label={t.dlTitle} className="grid grid-cols-4 gap-2">
+        <div role="group" aria-label={t.dlTitle} className="grid grid-cols-3 gap-2">
           {PLATS.map(({ k, Icon }) => (
-            <button key={k} type="button" aria-pressed={plat === k} onClick={() => setPlat(k)} className={`flex min-h-11 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2.5 text-xs font-semibold transition-colors ${plat === k ? "border-primary bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+            <button key={k} type="button" aria-pressed={plat === k} onClick={() => setPlat(k)} className={`flex min-h-16 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 py-3 text-[13px] font-semibold transition-colors duration-300 ${plat === k ? "border-primary bg-accent text-accent-foreground" : "text-muted-foreground hover:border-input hover:text-foreground"}`}>
               <Icon size={20} />
               {t.dlPlats[k].name}
             </button>
           ))}
         </div>
-        <div className="flex flex-col gap-2.5 rounded-2xl bg-muted p-4">
-          <span className="text-[15px] font-semibold">{p.title}</span>
-          {p.lines.map((x) => (
-            <span key={x} className="text-[14px] leading-relaxed text-soft-foreground">{x}</span>
-          ))}
-          {p.apk && <a href="/api/app/layan.apk" download className={`${BTN_ACC} mt-1 self-start`}>{p.apk}</a>}
-          {p.alt && <span className="text-[13.5px] text-muted-foreground">{p.alt}</span>}
-          <Link href={`/unduh#${plat}`} onClick={() => onOpenChange(false)} className="text-sm font-semibold text-primary underline-offset-4 hover:underline">{t.dlMore}</Link>
-        </div>
+        {p && plat ? (
+          <div key={plat} className="flex flex-col gap-2.5 rounded-2xl bg-muted p-4 animate-[layanMsgIn_.4s_cubic-bezier(.2,.7,.2,1)_both] motion-reduce:animate-none">
+            <span className="text-[15px] font-semibold">{p.title}</span>
+            {p.lines.map((x) => (
+              <span key={x} className="text-[14px] leading-relaxed text-soft-foreground">{x}</span>
+            ))}
+            {p.apk && <a href="/api/app/layan.apk" download className={`${BTN_ACC} mt-1 self-start`}>{p.apk}</a>}
+            {p.alt && <span className="text-[13.5px] text-muted-foreground">{p.alt}</span>}
+            <Link href={`/unduh#${plat}`} onClick={() => onOpenChange(false)} className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-semibold text-primary underline-offset-4 hover:underline">{t.dlMore}<Arrow size={15} /></Link>
+          </div>
+        ) : (
+          <p className="m-0 rounded-2xl border border-dashed p-4 text-center text-[14px] text-muted-foreground">{t.dlPick}</p>
+        )}
       </DialogContent>
     </Dialog>
   )
@@ -679,11 +678,8 @@ export function Landing() {
   const [rail, setRail] = useState(0)
   const [menu, setMenu] = useState(false)
   const [dl, setDl] = useState(false)
-  const [plat, setPlat] = useState<Plat>("android")
-  const openDl = () => {
-    setPlat(detectPlat())
-    setDl(true)
-  }
+  const [plat, setPlat] = useState<Plat | null>(null)
+  const openDl = () => setDl(true)
   const [intent, setIntent] = useState<Intent | null>(null)
 
   const root = useRef<HTMLDivElement>(null)
@@ -719,7 +715,8 @@ export function Landing() {
   useEffect(() => {
     const tick = () => {
       const vh = window.innerHeight
-      setScrolled(window.scrollY > 24)
+      // ambang ganda: tidak berkedip bolak-balik saat scroll pelan di sekitar batas
+      setScrolled((was) => (was ? window.scrollY > 8 : window.scrollY > 32))
       let r = 0
       SECTIONS.forEach((id, i) => {
         const el = document.getElementById(id)
@@ -814,6 +811,14 @@ export function Landing() {
     return () => timers.forEach(clearTimeout)
   }, [t, motion])
 
+  // menu HP: Esc menutup
+  useEffect(() => {
+    if (!menu) return
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false)
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [menu])
+
   // modal: kunci scroll, fokus ke tombol utama, Esc & trap Tab, fokus kembali saat ditutup
   useEffect(() => {
     if (!modal) return
@@ -857,18 +862,24 @@ export function Landing() {
   const link = (id: string) => (e: React.MouseEvent) => (e.preventDefault(), scrollToId(id))
 
   const navLinks = ([["layanan", t.nav.layanan, 1], ["cara-kerja", t.nav.cara, 2], ["mulai", t.nav.app, 3]] as const).map(([id, label, idx]) => ({ id, label, on: rail === idx }))
+  // dua keadaan navbar memakai bentuk nilai yang sama (blur 0px, bayangan transparan, bukan "none")
+  // supaya browser bisa menginterpolasi semuanya; "none" membuat blur dan bayangan muncul tiba-tiba
   const nav = scrolled
-    ? { outer: "12px 12px 0", maxW: 1040, h: 58, inner: "10px", bg: "color-mix(in srgb, var(--background) 84%, transparent)", bd: "var(--border)", blur: "blur(14px) saturate(1.4)", sh: "0 12px 40px -20px rgba(22,24,26,.25)" }
-    : { outer: "18px 12px 0", maxW: 1400, h: 64, inner: "clamp(8px,2vw,24px)", bg: "transparent", bd: "transparent", blur: "none", sh: "none" }
+    ? { outer: "12px", maxW: 1040, h: 58, inner: "10px", bg: "color-mix(in srgb, var(--background) 84%, transparent)", bd: "var(--border)", blur: "blur(14px) saturate(1.4)", sh: "0 12px 40px -20px rgba(22,24,26,.25)" }
+    : { outer: "18px", maxW: 1400, h: 64, inner: "clamp(8px,2vw,24px)", bg: "color-mix(in srgb, var(--background) 0%, transparent)", bd: "transparent", blur: "blur(0px) saturate(1)", sh: "0 12px 40px -20px rgba(22,24,26,0)" }
+  const NAV_T = `700ms ${EASE}`
   const initial = ((me?.name || t.student).trim()[0] || "M").toUpperCase()
 
   return (
     <div ref={root} data-motion={motion} className="layan-landing min-h-dvh overflow-x-clip bg-background text-foreground antialiased selection:bg-accent [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-[3px] [&_:focus-visible]:outline-ring">
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-60 flex justify-center transition-[padding] duration-[450ms] ease-[cubic-bezier(.2,.7,.2,1)]" style={{ padding: nav.outer }}>
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-60 flex justify-center px-3 motion-reduce:transition-none" style={{ paddingTop: nav.outer, transition: `padding-top ${NAV_T}` }}>
         <nav
           aria-label={t.navAria}
-          className="pointer-events-auto flex w-full min-w-0 items-center justify-between gap-4 rounded-[18px] border transition-all duration-500 ease-[cubic-bezier(.2,.7,.2,1)]"
-          style={{ maxWidth: nav.maxW, height: nav.h, padding: `0 ${nav.inner}`, background: nav.bg, borderColor: nav.bd, backdropFilter: nav.blur, WebkitBackdropFilter: nav.blur, boxShadow: nav.sh }}
+          className="pointer-events-auto flex w-full min-w-0 items-center justify-between gap-4 rounded-[18px] border motion-reduce:transition-none"
+          style={{
+            maxWidth: nav.maxW, height: nav.h, padding: `0 ${nav.inner}`, background: nav.bg, borderColor: nav.bd, backdropFilter: nav.blur, WebkitBackdropFilter: nav.blur, boxShadow: nav.sh,
+            transition: ["max-width", "height", "padding", "background-color", "border-color", "backdrop-filter", "-webkit-backdrop-filter", "box-shadow"].map((x) => `${x} ${NAV_T}`).join(", "),
+          }}
         >
           <a href="#top" onClick={link("top")} aria-label="LAYAN" className="flex shrink-0 items-center gap-2.5 text-[17px] font-extrabold tracking-[.04em] text-foreground">
             <Logo size={26} />
@@ -911,29 +922,39 @@ export function Landing() {
           </div>
         </nav>
       </header>
-      {menu && (
-        <div className="fixed inset-x-3 top-[80px] z-[59] flex flex-col rounded-[20px] border bg-card p-2.5 shadow-[0_30px_60px_-30px_rgba(22,24,26,.3)] animate-[layanMsgIn_.35s_cubic-bezier(.2,.7,.2,1)_both] min-[1080px]:hidden">
-          {navLinks.map((l) => (
-            <a key={l.id} href={"#" + l.id} onClick={link(l.id)} className="rounded-xl px-3.5 py-4 text-xl font-medium tracking-[-.02em] text-foreground hover:bg-muted">
-              {l.label}
-            </a>
+      {/* menu HP: selalu terpasang supaya buka dan tutup sama-sama bertransisi (turun dari navbar, naik saat ditutup) */}
+      <div
+        aria-hidden={!menu}
+        inert={!menu}
+        className="fixed inset-x-3 z-[59] flex origin-top flex-col rounded-[20px] border bg-card p-2.5 shadow-[0_30px_60px_-30px_rgba(22,24,26,.3)] motion-reduce:transition-none min-[1080px]:hidden"
+        style={{
+          top: scrolled ? 78 : 90,
+          opacity: menu ? 1 : 0,
+          transform: menu ? "none" : "translateY(-10px) scale(.98)",
+          visibility: menu ? "visible" : "hidden",
+          transition: `opacity .35s ${EASE}, transform .45s ${EASE}, top ${NAV_T}, visibility 0s linear ${menu ? "0s" : ".45s"}`,
+        }}
+      >
+        {navLinks.map((l, i) => (
+          <a key={l.id} href={"#" + l.id} onClick={link(l.id)} className="rounded-xl px-3.5 py-4 text-xl font-medium tracking-[-.02em] text-foreground hover:bg-muted motion-reduce:transition-none" style={{ opacity: menu ? 1 : 0, transform: menu ? "none" : "translateY(-6px)", transition: `opacity .4s ${EASE} ${menu ? 60 + i * 40 : 0}ms, transform .5s ${EASE} ${menu ? 60 + i * 40 : 0}ms` }}>
+            {l.label}
+          </a>
+        ))}
+        <Link href="/faq" onClick={() => setMenu(false)} className="rounded-xl px-3.5 py-4 text-xl font-medium tracking-[-.02em] text-foreground hover:bg-muted">
+          {t.nav.faq}
+        </Link>
+        <div role="group" aria-label={t.langLabel} className="mt-1 flex gap-1 rounded-2xl border bg-card/60 p-1.5">
+          {(["id", "en"] as const).map((l) => (
+            <button key={l} type="button" onClick={() => { setLang(l); setMenu(false) }} aria-pressed={lang === l} className={`h-11 flex-1 cursor-pointer rounded-xl text-xs font-semibold uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              {l === "id" ? "Indonesia" : "English"}
+            </button>
           ))}
-          <Link href="/faq" onClick={() => setMenu(false)} className="rounded-xl px-3.5 py-4 text-xl font-medium tracking-[-.02em] text-foreground hover:bg-muted">
-            {t.nav.faq}
-          </Link>
-          <div role="group" aria-label={t.langLabel} className="mt-1 flex gap-1 rounded-2xl border bg-card/60 p-1.5">
-            {(["id", "en"] as const).map((l) => (
-              <button key={l} type="button" onClick={() => { setLang(l); setMenu(false) }} aria-pressed={lang === l} className={`h-11 flex-1 cursor-pointer rounded-xl text-xs font-semibold uppercase tracking-[.06em] transition-colors duration-300 ${lang === l ? "bg-ink text-ink-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                {l === "id" ? "Indonesia" : "English"}
-              </button>
-            ))}
-          </div>
-          <button type="button" role="switch" aria-checked={motion === "on"} onClick={toggleMotion} className={`mt-1 flex h-12 justify-between px-3.5 cursor-pointer items-center gap-2.5 rounded-full border bg-card/60 text-[13.5px] font-medium transition-colors duration-300 hover:text-foreground ${motion === "on" ? "text-foreground" : "text-muted-foreground"}`}>
-            {t.motionLabel}
-            <SwitchTrack on={motion === "on"} />
-          </button>
         </div>
-      )}
+        <button type="button" role="switch" aria-checked={motion === "on"} onClick={toggleMotion} className={`mt-1 flex h-12 justify-between px-3.5 cursor-pointer items-center gap-2.5 rounded-full border bg-card/60 text-[13.5px] font-medium transition-colors duration-300 hover:text-foreground ${motion === "on" ? "text-foreground" : "text-muted-foreground"}`}>
+          {t.motionLabel}
+          <SwitchTrack on={motion === "on"} />
+        </button>
+      </div>
 
       <main>
         {/* 01 Hero: bersih, hanya judul, kalimat pendek, dan dua tombol */}
@@ -953,8 +974,16 @@ export function Landing() {
             </h1>
             <div className="mt-[clamp(22px,3.6vh,40px)] flex max-w-[560px] flex-col items-start gap-8">
               <p data-intro="2" className="m-0 text-[length:clamp(16px,1.25vw,19px)] leading-normal text-soft-foreground text-pretty">{t.heroSub}</p>
-              <div data-intro="3">
+              <div data-intro="3" className="flex flex-col items-start gap-5">
                 <GoButton onClick={gate({ key: "start", path: "/app" })} className="shadow-[0_10px_30px_-12px_rgba(22,24,26,.5)]">{t.cta1}</GoButton>
+                <ul className="m-0 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-[13.5px] text-muted-foreground">
+                  {t.facts.map((f) => (
+                    <li key={f} className="flex items-center gap-1.5">
+                      <span className="text-primary"><Check size={13} /></span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
@@ -962,10 +991,20 @@ export function Landing() {
 
         {/* 01b Yang bisa diurus mahasiswa: minta layanan (staf) dan lapor fasilitas (teknisi), berjalan sendiri */}
         <StudentFlows lang={lang} motion={motion}>
-          {/* Panduan peran: bagian dari section flows, netral, menghitam saat hover */}
-          <div data-reveal className="mt-[clamp(20px,3vh,28px)] flex flex-wrap justify-center gap-3">
-            <Link href="/untuk-staf" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideStaf}</Link>
-            <Link href="/untuk-teknisi" className="inline-flex h-[54px] cursor-pointer items-center whitespace-nowrap rounded-full border border-input px-6 text-base font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:border-ink hover:bg-ink hover:text-ink-foreground active:scale-[.98]">{t.guideTek}</Link>
+          {/* Panduan peran: dua tombol terpisah ke /untuk-staf dan /untuk-teknisi, tepat setelah alur mahasiswa */}
+          <div className="mt-[clamp(20px,3vh,28px)] grid gap-3 sm:grid-cols-2">
+            {([["/untuk-staf", t.guideStaf, t.guideStafSub, ClipboardCheck], ["/untuk-teknisi", t.guideTek, t.guideTekSub, Wrench]] as const).map(([href, title, sub, GIcon], i) => (
+              <Link key={href} href={href} data-reveal data-delay={i * 80} className="group flex min-h-[84px] items-center gap-4 rounded-[20px] border bg-card p-4 pr-5 transition-all duration-300 ease-[cubic-bezier(.2,.7,.2,1)] hover:-translate-y-0.5 hover:border-ink hover:shadow-e2 active:scale-[.99]">
+                <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-[14px] bg-muted text-foreground transition-colors duration-300 group-hover:bg-ink group-hover:text-ink-foreground">
+                  <GIcon className="size-[22px]" />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="text-[16px] font-semibold">{title}</span>
+                  <span className="text-[13.5px] leading-snug text-muted-foreground text-pretty">{sub}</span>
+                </span>
+                <span aria-hidden className="shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-1 group-hover:text-foreground"><Arrow /></span>
+              </Link>
+            ))}
           </div>
         </StudentFlows>
 
@@ -1021,7 +1060,7 @@ export function Landing() {
         </section>
       </main>
 
-      {/* Panel Unduh: Apple / Android / Windows / Linux */}
+      {/* Panel Unduh: Windows / iPhone / Android */}
       <DownloadDialog t={t} plat={plat} setPlat={setPlat} open={dl} onOpenChange={setDl} />
 
       {/* Modal masuk: menyebut aksi & pertanyaan yang akan dilanjutkan setelah login */}
