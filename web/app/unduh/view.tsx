@@ -247,7 +247,7 @@ export function UnduhView() {
                         onClick={() => setStep(i)}
                         className={`flex w-full cursor-pointer items-start gap-4 rounded-[18px] border p-4 text-left transition-all duration-300 ${on ? "border-primary bg-card shadow-e1" : "border-transparent hover:bg-card/70"}`}
                       >
-                        <span className={`grid size-8 flex-none place-items-center rounded-full font-mono text-[13px] font-semibold transition-colors duration-300 ${on ? "bg-primary text-primary-foreground" : done ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}>
+                        <span className={`grid size-8 flex-none place-items-center rounded-full text-[13px] font-semibold transition-colors duration-300 ${on ? "bg-primary text-primary-foreground" : done ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground"}`}>
                           {done ? <CheckIcon size={14} /> : i + 1}
                         </span>
                         <span className="flex min-w-0 flex-col gap-1">
@@ -263,7 +263,7 @@ export function UnduhView() {
               </ol>
 
               <div className="flex flex-wrap items-center gap-3">
-                <span className="w-full font-mono text-xs text-muted-foreground sm:mr-auto sm:w-auto">{t.step} {step + 1} {t.of} {g.steps.length}</span>
+                <span className="w-full text-xs font-medium text-muted-foreground sm:mr-auto sm:w-auto">{t.step} {step + 1} {t.of} {g.steps.length}</span>
                 <button type="button" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0} className={`${BTN_LINE} h-11 flex-1 justify-center gap-1.5 px-4 text-[14px] disabled:pointer-events-none disabled:opacity-40 sm:flex-none`}>
                   <ChevronLeft className="size-4" />
                   {t.prev}
@@ -309,7 +309,7 @@ function ApkCard({ t, release }: { t: Dict; release: Release | undefined }) {
       </figure>
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-1">
-          <span className="font-mono text-[11px] uppercase tracking-[.08em] text-subtle-foreground">{t.apkTitle} · {t.latest}</span>
+          <span className="text-[11px] font-semibold uppercase tracking-[.08em] text-subtle-foreground">{t.apkTitle} · {t.latest}</span>
           {release === undefined ? (
             <span className="text-[15px] text-muted-foreground">{t.checking}</span>
           ) : release ? (
