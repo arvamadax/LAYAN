@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CircleAlert, Search } from "lucide-react"
+import Link from "next/link"
+import { Activity as ActivityIcon, CircleAlert, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { api } from "@/lib/api"
 import { TopBar } from "./app-bar"
@@ -55,9 +56,16 @@ export function AdminConsole() {
     <div className="flex min-h-dvh flex-col bg-background">
       <TopBar section="Admin pusat" themeToggle />
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-5 px-4 py-6 sm:px-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold">Pemantauan pemakaian</h1>
-          <p className="text-[13px] text-muted-foreground">Login, IP, pemakaian AI, dan permintaan layanan. Diperbarui otomatis tiap 15 detik.</p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-xl font-bold">Pemantauan pemakaian</h1>
+            <p className="text-[13px] text-muted-foreground">Login, IP, pemakaian AI, dan permintaan layanan. Diperbarui otomatis tiap 15 detik.</p>
+          </div>
+          {/* status sistem khusus admin, tidak ditautkan dari halaman publik */}
+          <Link href="/uptime" className="inline-flex h-11 items-center gap-2 rounded-full border border-input bg-card px-4 text-[13px] font-semibold hover:bg-background">
+            <ActivityIcon className="size-4 text-primary" />
+            Uptime sistem
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
