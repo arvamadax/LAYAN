@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+import { flushSync } from "react-dom"
 import { useTheme } from "next-themes"
 import { ChevronDown, LogOut, Moon, Sun } from "lucide-react"
 import {
@@ -65,17 +67,37 @@ export function AccountPill() {
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme()
+  const [spun, setSpun] = useState(false)
+  const flip = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const next = resolvedTheme === "dark" ? "light" : "dark"
+    // di landing saklar Animasi yang menentukan; di halaman lain setelan "kurangi animasi" perangkat
+    const land = document.querySelector<HTMLElement>(".layan-landing")
+    const calm = land ? land.dataset.motion === "off" : matchMedia("(prefers-reduced-motion: reduce)").matches
+    setSpun(!calm)
+    if (!document.startViewTransition || calm) return setTheme(next)
+    // mode baru melebar sebagai lingkaran dari tengah tombol sampai menutup layar
+    const b = e.currentTarget.getBoundingClientRect(), x = b.left + b.width / 2, y = b.top + b.height / 2
+    const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
+    const root = document.documentElement
+    root.dataset.vt = "theme"
+    const vt = document.startViewTransition(() => flushSync(() => setTheme(next)))
+    vt.ready.then(() => root.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] }, { duration: 650, easing: "cubic-bezier(.2,.7,.2,1)", pseudoElement: "::view-transition-new(root)" })).catch(() => {})
+    // transisi bisa batal (tab di latar, timeout); tema tetap berganti, penanda tetap dibersihkan
+    const clean = () => delete root.dataset.vt
+    vt.finished.then(clean, clean)
+  }
+  // ikon ditukar lewat CSS agar tidak mismatch saat hydrate; setelah diklik, ikon yang muncul berputar masuk
+  const spin = spun ? "animate-[layanSpinIn_.55s_cubic-bezier(.3,1.4,.5,1)_both]" : ""
   return (
     <button
       type="button"
       aria-label="Ganti mode terang dan gelap"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      onClick={flip}
       suppressHydrationWarning
       className="grid size-11 cursor-pointer place-items-center rounded-md hover:bg-muted lg:size-9"
     >
-      {/* ikon ditukar lewat CSS agar tidak mismatch saat hydrate */}
-      <Moon className="size-[18px] dark:hidden" />
-      <Sun className="hidden size-[18px] dark:block" />
+      <Moon className={`size-[18px] dark:hidden ${spin}`} />
+      <Sun className={`hidden size-[18px] dark:block ${spin}`} />
     </button>
   )
 }

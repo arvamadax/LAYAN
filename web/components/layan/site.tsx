@@ -1,7 +1,8 @@
 "use client"
 
-import { useSyncExternalStore, type ReactNode } from "react"
+import { useSyncExternalStore, ViewTransition, type ReactNode } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { HOME } from "@/lib/data"
 import { ThemeToggle } from "@/components/layan/app-bar"
 import { useStore } from "@/components/layan/store"
@@ -72,7 +73,6 @@ const SITE = {
   id: {
     lang: "Bahasa", nav: "Navigasi", signin: "Masuk", open: "Buka LAYAN",
     links: { layanan: "Layanan", cara: "Cara kerja", unduh: "Unduh app", staf: "Untuk staf", tek: "Untuk teknisi", faq: "FAQ", keamanan: "Keamanan & sumber", source: "Kode sumber" },
-    col: "Lainnya",
     tagline: "Asisten layanan kampus. Satu chat untuk surat akademik, aturan akademik, booking ruang, dan laporan kerusakan.",
     made: "Dibuat untuk PENS Hackathon 2026.",
     kbNote: "Isi pedoman akademik di basis pengetahuan masih contoh, bukan dokumen resmi.",
@@ -80,37 +80,38 @@ const SITE = {
   en: {
     lang: "Language", nav: "Navigation", signin: "Sign in", open: "Open LAYAN",
     links: { layanan: "Services", cara: "How it works", unduh: "Get the app", staf: "For staff", tek: "For technicians", faq: "FAQ", keamanan: "Trust & sources", source: "Source code" },
-    col: "More",
     tagline: "Campus service assistant. One chat for academic letters, academic rules, room booking, and damage reports.",
     made: "Built for PENS Hackathon 2026.",
     kbNote: "The academic handbook in the knowledge base is sample content, not an official document.",
   },
 }
 
-export function SiteFooter({ lang }: { lang: Lang }) {
+/** Footer: link yang sudah tampil di atas (navbar/tombol halaman itu) dan halaman yang sedang dibuka tidak diulang. */
+export function SiteFooter({ lang, above = [] }: { lang: Lang; above?: string[] }) {
   const s = SITE[lang], l = s.links
-  const links: [string, string][] = [[l.unduh, "/unduh"], [l.faq, "/faq"], [l.staf, "/untuk-staf"], [l.tek, "/untuk-teknisi"], [l.keamanan, "/keamanan"], [l.source, "https://github.com/arvamadax/LAYAN"], [s.signin, "/login"]]
+  const path = usePathname()
+  const links = ([[l.unduh, "/unduh"], [l.faq, "/faq"], [l.staf, "/untuk-staf"], [l.tek, "/untuk-teknisi"], [l.keamanan, "/keamanan"], [l.source, "https://github.com/arvamadax/LAYAN"], [s.signin, "/login"]] as [string, string][])
+    .filter(([, href]) => href !== path && !above.includes(href))
   return (
-    <footer className={`border-t bg-panel/40 pt-14 pb-8 ${GUTTER}`}>
+    <footer className={`border-t bg-panel/40 pt-12 pb-8 ${GUTTER}`}>
       <div className={`${WRAP} max-w-[1376px]`}>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-[1.4fr_minmax(0,1fr)]">
-          <div className="col-span-2 flex max-w-[340px] flex-col gap-3 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2.5 text-[16px] font-extrabold tracking-[.04em] text-foreground">
+        <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+          <div className="flex max-w-[340px] flex-col gap-3">
+            <Link href="/" className="flex w-fit items-center gap-2.5 text-[16px] font-extrabold tracking-[.04em] text-foreground">
               <Logo size={24} />
               LAYAN
             </Link>
             <p className="m-0 text-[14px] leading-relaxed text-muted-foreground">{s.tagline}</p>
           </div>
-          <nav aria-label={s.col} className="flex flex-col gap-2.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[.08em] text-subtle-foreground">{s.col}</span>
+          <nav aria-label={s.nav} className="-mx-3 flex flex-wrap gap-x-1 gap-y-1 md:justify-end">
             {links.map(([label, href]) => (
-              <Link key={href} href={href} className="w-fit text-[14.5px] text-soft-foreground transition-colors hover:text-foreground">
+              <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-full px-3 text-[14.5px] text-soft-foreground transition-colors duration-300 hover:bg-foreground/5 hover:text-foreground">
                 {label}
               </Link>
             ))}
           </nav>
         </div>
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-[13px] text-muted-foreground">
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-[13px] text-muted-foreground">
           <span>© 2026 LAYAN · {s.made}</span>
           <span>{s.kbNote}</span>
         </div>
@@ -126,6 +127,8 @@ export function SitePage({ lang, kicker, title, sub, children }: { lang: Lang; k
   // sama dengan navbar landing; Untuk staf & Untuk teknisi diakses lewat dua tombol di bawah section alur mahasiswa
   const links: [string, string][] = [[l.layanan, "/#layanan"], [l.cara, "/#cara-kerja"], [l.unduh, "/unduh"], [l.faq, "/faq"]]
   return (
+    // masuk dari landing (Link dengan transitionTypes "layan-page") = halaman naik sambil memudar; navigasi lain tanpa animasi
+    <ViewTransition enter={{ "layan-page": "layan-page-in", default: "none" }} default="none">
     <div className="min-h-dvh bg-background text-foreground antialiased selection:bg-accent [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-[3px] [&_:focus-visible]:outline-ring">
       <header className={`sticky top-0 z-50 border-b bg-background/85 backdrop-blur-md ${GUTTER}`}>
         <div className={`${WRAP} max-w-[1376px] flex h-16 items-center justify-between gap-4`}>
@@ -159,8 +162,9 @@ export function SitePage({ lang, kicker, title, sub, children }: { lang: Lang; k
         </section>
         {children}
       </main>
-      <SiteFooter lang={lang} />
+      <SiteFooter lang={lang} above={[...links.map(([, href]) => href), "/login"]} />
     </div>
+    </ViewTransition>
   )
 }
 

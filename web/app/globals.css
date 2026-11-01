@@ -193,3 +193,9 @@
   28%, 100% { background-color: var(--card); border-color: var(--border); color: var(--foreground) }
 }
 @keyframes layanNudge { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(3px) } }
+/* transisi halaman dari landing ke halaman publik (ViewTransition di SitePage) */
+::view-transition-new(.layan-page-in) { animation: layanMsgIn .6s cubic-bezier(.2,.7,.2,1) both }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important } }
+/* ganti mode (ThemeToggle): lingkaran dari tombol, tanpa crossfade bawaan */
+html[data-vt="theme"]::view-transition-old(root), html[data-vt="theme"]::view-transition-new(root) { animation: none; mix-blend-mode: normal }
+@keyframes layanSpinIn { from { opacity: 0; transform: rotate(-120deg) scale(.4) } to { opacity: 1; transform: none } }

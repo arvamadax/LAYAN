@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
+import { MousePointer2 } from "lucide-react"
 import { CheckIcon, Logo, type Lang } from "@/components/layan/site"
 
 // Section setelah hero: dua hal yang bisa dilakukan mahasiswa, masing-masing ke orang yang berbeda.
@@ -9,6 +10,7 @@ import { CheckIcon, Logo, type Lang } from "@/components/layan/site"
 //  - Lapor fasilitas -> Teknisi (laporan kerusakan, dari chat langsung ke board)
 // Kedua kartu bergantian otomatis sampai pengguna memilih: hover/klik chip atau kartu
 // mengunci pilihan itu dan memainkan animasinya (tidak bergantian lagi).
+// Di layar tujuan, kursor bernama (Staf/Teknisi) menekan tombol atau menyeret kartu: yang memutuskan manusia, bukan agent.
 // Contoh mengikuti layanan yang benar-benar ada di API (LETTERS di api/src/tools.rs, fasilitas.rs).
 
 type MintaEx = { chip: number; q: string; checks: string[]; ticket: string; title: string; meta: string; action: string; decided: string; done: string }
@@ -71,7 +73,7 @@ const T = {
 type Dict = (typeof T)["id"]
 
 // langkah tiap kartu (nama, lama ms). Tiket berangkat di "go", kembali di "back".
-const MINTA_STEPS = [["type", 1700], ["check", 2000], ["go", 1100], ["review", 1300], ["decided", 1400], ["back", 1000], ["done", 2200]] as const
+const MINTA_STEPS = [["type", 1700], ["check", 2000], ["go", 1100], ["review", 1500], ["decided", 1400], ["back", 1000], ["done", 2200]] as const
 const LAPOR_STEPS = [["type", 1600], ["check", 2000], ["go", 1100], ["new", 1000], ["doing", 1200], ["fixed", 1300], ["back", 1000], ["done", 2200]] as const
 type Step = (typeof MINTA_STEPS)[number][0] | (typeof LAPOR_STEPS)[number][0]
 const DEST_STEPS: Step[] = ["review", "decided", "new", "doing", "fixed"]
@@ -222,6 +224,17 @@ function Rail({ out, label, active }: { out: boolean; label: string; active: boo
   )
 }
 
+/** Kursor bernama ala multiplayer; datang dari kanan bawah saat show, riak di ujungnya saat click. */
+function Cursor({ show, who, click, at = "left-1/2 top-1/2" }: { show: boolean; who: string; click?: boolean; at?: string }) {
+  return (
+    <span aria-hidden className={`pointer-events-none absolute ${at} z-10 flex items-start transition-[transform,opacity] duration-[900ms] ${EASE}`} style={{ transform: show ? "none" : "translate(70px,110px)", opacity: show ? 1 : 0 }}>
+      {click && <span className="absolute -left-1 -top-1 size-2.5 rounded-full bg-primary/30 animate-[layanPulse_.7s_ease-out_1]" />}
+      <MousePointer2 className="size-4 shrink-0 fill-foreground stroke-card" />
+      <span className="mt-3.5 -ml-0.5 whitespace-nowrap rounded-full bg-ink px-2 py-0.5 text-[10.5px] font-semibold text-ink-foreground">{who}</span>
+    </span>
+  )
+}
+
 /* ---------- layar chat mahasiswa (dipakai kedua kartu) ---------- */
 
 function Chat({ t, step, q, typedRef, children, done }: { t: Dict; step: Step; q: string; typedRef: React.RefObject<HTMLSpanElement | null>; children?: ReactNode; done?: string }) {
@@ -304,6 +317,7 @@ function MintaCard({ t, ex, step, idle, onEnter, onChip }: { t: Dict; ex: MintaE
                 <span className="truncate text-[13.5px] font-semibold">{ex.title}</span>
                 <span className="truncate text-[12px] text-muted-foreground">{ex.meta}</span>
               </span>
+              <span className="relative shrink-0">
               {decided ? (
                 <span key="ok" className="flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[12px] font-semibold text-primary-foreground animate-[layanMsgIn_.4s_cubic-bezier(.3,1.4,.5,1)_both]"><CheckIcon size={11} />{ex.decided}</span>
               ) : (
@@ -312,6 +326,9 @@ function MintaCard({ t, ex, step, idle, onEnter, onChip }: { t: Dict; ex: MintaE
                   <span className="inline-flex h-7 items-center rounded-full border border-input px-3 text-[12px] font-medium">{t.reject}</span>
                 </span>
               )}
+              {/* kursor staf mendekati tombol aksi, lalu menekannya */}
+              <span className="absolute left-[22px] top-[17px]"><Cursor show={step === "review" || decided} who={t.staff} click={step === "decided"} /></span>
+              </span>
             </div>
             {t.others.map(([what, st]) => (
               <div key={what} className="flex items-center justify-between rounded-[12px] bg-muted/60 px-3.5 py-2.5 text-[12.5px]">
@@ -367,6 +384,8 @@ function LaporCard({ t, ex, step, idle, onEnter, onChip }: { t: Dict; ex: LaporE
                   <span className="font-mono text-[10.5px] text-muted-foreground">{ex.room}</span>
                   {col === 2 && <span className="mt-0.5 flex size-3.5 items-center justify-center rounded-full bg-primary text-primary-foreground"><CheckIcon size={8} /></span>}
                 </div>
+                {/* kursor teknisi memegang kartu dan ikut bergeser antar kolom */}
+                <Cursor show={step === "new" || step === "doing" || step === "fixed"} who={t.tech} click={step === "doing"} at="left-[18%] top-1/2" />
               </div>
             </div>
           </div>
