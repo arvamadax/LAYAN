@@ -868,6 +868,8 @@ export function Landing() {
     ? { outer: "12px", maxW: 1040, h: 58, inner: "10px", bg: "color-mix(in srgb, var(--background) 84%, transparent)", bd: "var(--border)", blur: "blur(14px) saturate(1.4)", sh: "0 12px 40px -20px rgba(22,24,26,.25)" }
     : { outer: "18px", maxW: 1400, h: 64, inner: "clamp(8px,2vw,24px)", bg: "color-mix(in srgb, var(--background) 0%, transparent)", bd: "transparent", blur: "blur(0px) saturate(1)", sh: "0 12px 40px -20px rgba(22,24,26,0)" }
   const NAV_T = `700ms ${EASE}`
+  // pindah ke halaman publik (/faq, /untuk-staf, /untuk-teknisi): halaman tujuan naik sambil memudar, kecuali Animasi mati
+  const pageT = motion === "on" ? ["layan-page"] : undefined
   const initial = ((me?.name || t.student).trim()[0] || "M").toUpperCase()
 
   return (
@@ -891,7 +893,7 @@ export function Landing() {
                 {l.label}
               </a>
             ))}
-            <Link href="/faq" className="whitespace-nowrap rounded-full px-3.5 py-2 text-[14.5px] font-medium text-muted-foreground transition-colors duration-300 hover:bg-foreground/5 hover:text-foreground">
+            <Link href="/faq" transitionTypes={pageT} className="whitespace-nowrap rounded-full px-3.5 py-2 text-[14.5px] font-medium text-muted-foreground transition-colors duration-300 hover:bg-foreground/5 hover:text-foreground">
               {t.nav.faq}
             </Link>
           </div>
@@ -940,7 +942,7 @@ export function Landing() {
             {l.label}
           </a>
         ))}
-        <Link href="/faq" onClick={() => setMenu(false)} className="rounded-xl px-3.5 py-4 text-xl font-medium tracking-[-.02em] text-foreground hover:bg-muted">
+        <Link href="/faq" transitionTypes={pageT} onClick={() => setMenu(false)} className="rounded-xl px-3.5 py-4 text-xl font-medium tracking-[-.02em] text-foreground hover:bg-muted">
           {t.nav.faq}
         </Link>
         <div role="group" aria-label={t.langLabel} className="mt-1 flex gap-1 rounded-2xl border bg-card/60 p-1.5">
@@ -994,7 +996,7 @@ export function Landing() {
           {/* Panduan peran: dua tombol terpisah ke /untuk-staf dan /untuk-teknisi, tepat setelah alur mahasiswa */}
           <div className="mt-[clamp(20px,3vh,28px)] grid gap-3 sm:grid-cols-2">
             {([["/untuk-staf", t.guideStaf, t.guideStafSub, ClipboardCheck], ["/untuk-teknisi", t.guideTek, t.guideTekSub, Wrench]] as const).map(([href, title, sub, GIcon], i) => (
-              <Link key={href} href={href} data-reveal data-delay={i * 80} className="group flex min-h-[84px] items-center gap-4 rounded-[20px] border bg-card p-4 pr-5 transition-all duration-300 ease-[cubic-bezier(.2,.7,.2,1)] hover:-translate-y-0.5 hover:border-ink hover:shadow-e2 active:scale-[.99]">
+              <Link key={href} href={href} transitionTypes={pageT} data-reveal data-delay={i * 80} className="group flex min-h-[84px] items-center gap-4 rounded-[20px] border bg-card p-4 pr-5 transition-all duration-300 ease-[cubic-bezier(.2,.7,.2,1)] hover:-translate-y-0.5 hover:border-ink hover:shadow-e2 active:scale-[.99]">
                 <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-[14px] bg-muted text-foreground transition-colors duration-300 group-hover:bg-ink group-hover:text-ink-foreground">
                   <GIcon className="size-[22px]" />
                 </span>
@@ -1056,7 +1058,7 @@ export function Landing() {
               <Link href="/unduh" className="inline-flex h-[54px] items-center px-2 text-base font-semibold text-primary underline-offset-4 hover:underline">{t.installHow}</Link>
             </div>
           </div>
-          <SiteFooter lang={lang} />
+          <SiteFooter lang={lang} above={["/faq", "/untuk-staf", "/untuk-teknisi", "/unduh", "/login"]} />
         </section>
       </main>
 
